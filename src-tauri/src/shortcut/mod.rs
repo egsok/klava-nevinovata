@@ -22,8 +22,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
     self, get_settings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LLMPrompt,
-    OverlayPosition, OverlayStyle, PasteMethod, ShortcutBinding, SoundTheme, Theme, TypingTool,
-    APPLE_INTELLIGENCE_PROVIDER_ID,
+    OverlayPosition, OverlayStyle, PasteMethod, ShortcutActivation, ShortcutBinding, SoundTheme,
+    Theme, TypingTool, VadBackend, APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
 
@@ -560,8 +560,18 @@ fn initialize_handy_keys_with_rollback(app: &AppHandle) -> Result<bool, String> 
 
 #[tauri::command]
 #[specta::specta]
-pub fn change_ptt_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
-    settings::update_settings(&app, |s| s.push_to_talk = enabled);
+pub fn change_shortcut_activation_setting(
+    app: AppHandle,
+    activation: ShortcutActivation,
+) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.shortcut_activation = activation);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_hold_threshold_ms_setting(app: AppHandle, ms: u64) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.hold_threshold_ms = ms);
     Ok(())
 }
 
@@ -761,6 +771,12 @@ pub fn change_autostart_setting(app: AppHandle, enabled: bool) -> Result<(), Str
 #[tauri::command]
 #[specta::specta]
 pub fn change_update_checks_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
+    if settings::update_checks_forced_disabled() {
+        return Err(
+            "Update checks are disabled by system configuration (HANDY_DISABLE_UPDATER)".into(),
+        );
+    }
+
     settings::update_settings(&app, |s| s.update_checks_enabled = enabled);
 
     let _ = app.emit(
@@ -1234,6 +1250,29 @@ pub fn change_lazy_stream_close_setting(app: AppHandle, enabled: bool) -> Result
 #[specta::specta]
 pub fn change_vad_enabled_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
     settings::update_settings(&app, |s| s.vad_enabled = enabled);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn change_vad_backend_setting(app: AppHandle, backend: VadBackend) -> Result<(), String> {
+    if settings::get_settings(&app).vad_backend == backend {
+        return Ok(());
+    }
+
+    // Construct/swap the detector and, when necessary, reopen cpal away from
+    // the webview thread. Persist only after the runtime change succeeds so a
+    // rejected in-progress switch or failed microphone reopen rolls back cleanly.
+    let manager = app
+        .state::<std::sync::Arc<crate::managers::audio::AudioRecordingManager>>()
+        .inner()
+        .clone();
+    tokio::task::spawn_blocking(move || manager.update_vad_backend(backend))
+        .await
+        .map_err(|e| format!("audio task join failed: {e}"))?
+        .map_err(|e| format!("Failed to update VAD backend: {e}"))?;
+
+    settings::update_settings(&app, |s| s.vad_backend = backend);
     Ok(())
 }
 

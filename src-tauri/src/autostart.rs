@@ -7,8 +7,10 @@
 //! code-signing certificate's developer name instead of the app (#337).
 //! `SMAppService` login items are attributed to the app bundle itself and
 //! appear under "Open at Login" with the app's name and icon.
+//! Windows repairs the plugin's unquoted executable path in the Run entry.
 
 use tauri::AppHandle;
+#[cfg(not(target_os = "windows"))]
 use tauri_plugin_autostart::ManagerExt;
 
 /// Apply the user's autostart preference using the best mechanism for the
@@ -26,11 +28,14 @@ pub fn apply_autostart(app: &AppHandle, enabled: bool) {
         return;
     }
 
-    let manager = app.autolaunch();
+    #[cfg(target_os = "windows")]
+    let result = windows::apply(app, enabled);
+
+    #[cfg(not(target_os = "windows"))]
     let result = if enabled {
-        manager.enable()
+        app.autolaunch().enable()
     } else {
-        manager.disable()
+        app.autolaunch().disable()
     };
     if let Err(e) = result {
         log::warn!(
@@ -38,6 +43,77 @@ pub fn apply_autostart(app: &AppHandle, enabled: bool) {
             enabled,
             e
         );
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod windows {
+    use std::ffi::OsString;
+    use std::path::Path;
+
+    use tauri::AppHandle;
+    use tauri_plugin_autostart::ManagerExt;
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_SET_VALUE};
+    use winreg::RegKey;
+
+    const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+
+    pub fn apply(app: &AppHandle, enabled: bool) -> Result<(), tauri_plugin_autostart::Error> {
+        // Match the plugin's default entry name, including existing installs.
+        let name = &app.package_info().name;
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        if enabled {
+            // Preserve the plugin's StartupApproved handling. auto-launch 0.5.0
+            // writes an unquoted path, so repair it on every enable/startup.
+            app.autolaunch().enable()?;
+            let command = quoted_executable(&std::env::current_exe()?);
+            hkcu.open_subkey_with_flags(RUN_KEY, KEY_SET_VALUE)?
+                .set_value(name, &command)?;
+        } else {
+            app.autolaunch().disable()?;
+        }
+        Ok(())
+    }
+
+    // The plugin is configured without arguments in lib.rs. Quote the executable
+    // even without spaces so Windows always treats the entire path as one token.
+    fn quoted_executable(path: &Path) -> OsString {
+        let mut command = OsString::from("\"");
+        command.push(path.as_os_str());
+        command.push("\"");
+        command
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn quotes_user_profile_paths_with_spaces() {
+            let path = Path::new(r"C:\Users\Egor Sokolov\AppData\Local\klava-nevinovata\handy.exe");
+            assert_eq!(
+                quoted_executable(path),
+                OsString::from(
+                    r#""C:\Users\Egor Sokolov\AppData\Local\klava-nevinovata\handy.exe""#
+                )
+            );
+        }
+
+        #[test]
+        fn quotes_paths_without_spaces_without_adding_arguments() {
+            assert_eq!(
+                quoted_executable(Path::new(r"D:\apps\klava\handy.exe")),
+                OsString::from(r#""D:\apps\klava\handy.exe""#)
+            );
+        }
+
+        #[test]
+        fn preserves_unicode_in_executable_paths() {
+            assert_eq!(
+                quoted_executable(Path::new(r"C:\Users\Егор Соколов\Клава\handy.exe")),
+                OsString::from(r#""C:\Users\Егор Соколов\Клава\handy.exe""#)
+            );
+        }
     }
 }
 

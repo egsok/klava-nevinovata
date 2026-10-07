@@ -205,9 +205,19 @@
         "noResults": "Inga språk hittades",
         "auto": "Automatiskt"
       },
-      "pushToTalk": {
-        "label": "Tryck för att tala",
-        "description": "Håll ned för att spela in, släpp för att stoppa"
+      "shortcutActivation": {
+        "title": "Genvägens beteende",
+        "description": "Välj hur kortkommandot för transkribering startar och stoppar inspelningen.",
+        "options": {
+          "holdOrToggle": "Automatiskt",
+          "pushToTalk": "Håll",
+          "toggle": "Växla"
+        },
+        "descriptions": {
+          "hold_or_toggle": "Håll nere för att spela in eller tryck kort för att växla",
+          "push_to_talk": "Spelar in så länge du håller genvägen nedtryckt",
+          "toggle": "Tryck på genvägen för att starta inspelningen, tryck igen för att stoppa"
+        }
       }
     },
     "models": {
@@ -416,6 +426,14 @@
       "fillerWordRemoval": {
         "title": "Ta bort utfyllnadsord",
         "description": "Tar bort vanliga tvekljud från transkriberingar. Stäng av för att behålla dem."
+      },
+      "vadBackend": {
+        "title": "Backend för röstdetektering",
+        "description": "Välj detektorn som används för att filtrera bort tystnad. Earshot är experimentell; byt tillbaka till Silero om tal klipps eller brus behålls.",
+        "options": {
+          "silero": "Silero",
+          "earshot": "Earshot"
+        }
       }
     },
     "postProcessing": {
@@ -510,7 +528,8 @@
       },
       "updateChecks": {
         "label": "Sök efter uppdateringar",
-        "description": "Sök automatiskt efter nya versioner av {{appName}}"
+        "description": "Sök automatiskt efter nya versioner av {{appName}}",
+        "lockedDescription": "Inaktiverad av systemkonfiguration (HANDY_DISABLE_UPDATER)"
       },
       "soundTheme": {
         "label": "Ljudtema",
@@ -607,6 +626,17 @@
         "button": "Förhandsvisa",
         "noNotes": "Ingen medföljande versionsinformation hittades",
         "error": "Det gick inte att förhandsvisa versionsinformationen"
+      },
+      "holdThreshold": {
+        "title": "Tröskel för hållning",
+        "description": "Endast i automatiskt läge: hur länge (i millisekunder) genvägen måste hållas nere för att räknas som hållning i stället för ett tryck. Sänk värdet om inspelningen fortsätter efter korta hållningar; höj det om avsiktliga tryck tolkas som hållning."
+      },
+      "onboardingPreview": {
+        "title": "Förhandsvisa introduktionen",
+        "description": "Förhandsvisa introduktionsskärmarna utan att ändra behörigheter, modeller eller slutförandestatus",
+        "permissionsButton": "Behörigheter",
+        "modelsButton": "Modellval",
+        "exitButton": "Avsluta förhandsvisning"
       }
     },
     "about": {

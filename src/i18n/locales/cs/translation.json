@@ -225,9 +225,19 @@
         "noResults": "Žádné jazyky nenalezeny",
         "auto": "Automaticky"
       },
-      "pushToTalk": {
-        "label": "Stisk a mluv",
-        "description": "Podržte pro nahrávání, uvolněte pro zastavení"
+      "shortcutActivation": {
+        "title": "Chování zkratky",
+        "description": "Zvolte, jak má zkratka přepisu spouštět a zastavovat nahrávání.",
+        "options": {
+          "holdOrToggle": "Automaticky",
+          "pushToTalk": "Podržet",
+          "toggle": "Přepínat"
+        },
+        "descriptions": {
+          "hold_or_toggle": "Podržte pro nahrávání nebo klepněte pro přepnutí",
+          "push_to_talk": "Nahrává, dokud držíte zkratku",
+          "toggle": "Klepněte na zkratku pro zahájení nahrávání, klepněte znovu pro zastavení"
+        }
       }
     },
     "sound": {
@@ -416,6 +426,14 @@
       "fillerWordRemoval": {
         "title": "Odstranit výplňová slova",
         "description": "Odstraňuje běžná slova vyjadřující váhání z přepisů. Vypnutím je zachováte."
+      },
+      "vadBackend": {
+        "title": "Backend detekce hlasu",
+        "description": "Vyberte detektor používaný k filtrování ticha. Earshot je experimentální; pokud je řeč ořezávána nebo zůstává šum, přepněte zpět na Silero.",
+        "options": {
+          "silero": "Silero",
+          "earshot": "Earshot"
+        }
       }
     },
     "postProcessing": {
@@ -510,7 +528,8 @@
       },
       "updateChecks": {
         "label": "Kontrolovat aktualizace",
-        "description": "Automaticky kontrolovat nové verze {{appName}}"
+        "description": "Automaticky kontrolovat nové verze {{appName}}",
+        "lockedDescription": "Zakázáno systémovou konfigurací (HANDY_DISABLE_UPDATER)"
       },
       "soundTheme": {
         "label": "Zvukový motiv",
@@ -607,6 +626,17 @@
         "button": "Náhled",
         "noNotes": "Nebyly nalezeny žádné přibalené poznámky k vydání",
         "error": "Nepodařilo se zobrazit náhled poznámek k vydání"
+      },
+      "holdThreshold": {
+        "title": "Práh podržení",
+        "description": "Pouze v automatickém režimu: jak dlouho (v milisekundách) musí být zkratka držena, aby se počítala jako podržení místo klepnutí. Snižte, pokud po krátkém podržení nahrávání zůstává zapnuté; zvyšte, pokud jsou záměrná klepnutí vyhodnocena jako podržení."
+      },
+      "onboardingPreview": {
+        "title": "Náhled úvodního nastavení",
+        "description": "Prohlédněte si obrazovky úvodního nastavení beze změny oprávnění, modelů nebo stavu dokončení",
+        "permissionsButton": "Oprávnění",
+        "modelsButton": "Výběr modelu",
+        "exitButton": "Ukončit náhled"
       }
     },
     "about": {

@@ -16,4 +16,4 @@ pub use text::{
     OutputLanguageEvidence,
 };
 pub use utils::get_cpal_host;
-pub use vad::{SileroVad, VoiceActivityDetector};
+pub use vad::{EarshotVad, SileroVad, VoiceActivityDetector};

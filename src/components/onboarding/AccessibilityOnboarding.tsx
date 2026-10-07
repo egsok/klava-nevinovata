@@ -16,6 +16,7 @@ import { Keyboard, Mic, Check, Loader2 } from "lucide-react";
 
 interface AccessibilityOnboardingProps {
   onComplete: () => void;
+  preview?: boolean;
 }
 
 type PermissionStatus = "checking" | "needed" | "waiting" | "granted";
@@ -33,6 +34,7 @@ const TCC_RESET_COMMAND =
 
 const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   onComplete,
+  preview = false,
 }) => {
   const { t } = useTranslation();
   const [showTroubleshoot, setShowTroubleshoot] = useState(false);
@@ -133,6 +135,16 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
 
     setPermissionPlatform(nextPlatform);
 
+    // Debug previews are intentionally inert: show the permission request UI
+    // without checking or changing operating-system permissions.
+    if (preview) {
+      setPermissions({
+        accessibility: nextPlatform === "macos" ? "needed" : "granted",
+        microphone: nextPlatform === "other" ? "granted" : "needed",
+      });
+      return;
+    }
+
     // Skip immediately on unsupported platforms
     if (nextPlatform === "other") {
       onComplete();
@@ -203,7 +215,7 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
     };
 
     checkInitial();
-  }, [completeOnboarding, hasWindowsMicrophoneAccess, onComplete, t]);
+  }, [completeOnboarding, hasWindowsMicrophoneAccess, onComplete, preview, t]);
 
   // Polling for permissions after user clicks a button
   const startPolling = useCallback(() => {
@@ -306,6 +318,8 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   }, []);
 
   const handleGrantAccessibility = async () => {
+    if (preview) return;
+
     try {
       await requestAccessibilityPermission();
       setPermissions((prev) => ({ ...prev, accessibility: "waiting" }));
@@ -317,6 +331,8 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   };
 
   const handleResetAccessibility = async () => {
+    if (preview) return;
+
     try {
       const result = await commands.resetAccessibilityPermission();
       if (result.status === "error") {
@@ -360,6 +376,8 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   };
 
   const handleRestartApp = async () => {
+    if (preview) return;
+
     try {
       await relaunch();
     } catch (error) {
@@ -369,6 +387,8 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   };
 
   const handleGrantMicrophone = async () => {
+    if (preview) return;
+
     try {
       if (isWindows) {
         await commands.openMicrophonePrivacySettings();
@@ -394,7 +414,7 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   // Still checking platform/initial permissions
   if (isChecking) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-full flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-text/50" />
       </div>
     );
@@ -403,7 +423,7 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
   // All permissions granted - show success briefly
   if (allGranted) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4">
+      <div className="h-screen w-full flex flex-col items-center justify-center gap-4">
         <div className="p-4 rounded-full bg-state-soft/20">
           <Check className="w-12 h-12 text-state-soft" />
         </div>
@@ -416,7 +436,7 @@ const AccessibilityOnboarding: React.FC<AccessibilityOnboardingProps> = ({
 
   // Show permissions request screen
   return (
-    <div className="h-screen w-screen flex flex-col p-6 gap-6 items-center justify-center">
+    <div className="h-screen w-full flex flex-col p-6 gap-6 items-center justify-center">
       <div className="flex flex-col items-center gap-2">
         <HandyTextLogo width={200} />
       </div>

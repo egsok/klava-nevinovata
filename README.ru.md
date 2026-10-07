@@ -14,7 +14,7 @@
 
 `klava-nevinovata` — моя рабочая версия Handy, десктопного приложения для локального распознавания речи. Форк держится близко к upstream, но исправляет проблемы с качеством распознавания и надёжностью, которые я ловлю в повседневной русской диктовке под Windows.
 
-Текущий релиз форка: `0.9.6-1`, база — upstream `v0.9.6`.
+Текущий релиз форка: `0.9.7-1`, база — upstream `v0.9.7`.
 
 ## Чем отличается от upstream
 
@@ -50,7 +50,7 @@
 
 Готовые неподписанные установщики публикуются в [Releases](https://github.com/egsok/klava-nevinovata/releases). Там же остаётся предыдущая стабильная линия `0.8.3-N` — как запасной вариант.
 
-- **Windows:** скачай `klava-nevinovata_0.9.6-1_x64-setup.exe` (NSIS) или `.msi`. Если SmartScreen покажет «Windows protected your PC», выбери **More info → Run anyway**.
+- **Windows:** скачай `klava-nevinovata_0.9.7-1_x64-setup.exe` (NSIS) или `.msi`. Если SmartScreen покажет «Windows protected your PC», выбери **More info → Run anyway**.
 - **Linux:** скачай `.deb`, `.AppImage` или `.rpm` под свой дистрибутив.
 - **macOS:** используй `aarch64.dmg` для Apple Silicon или `x64.dmg` для Intel Mac, затем перетащи `klava-nevinovata.app` в `/Applications`.
 
