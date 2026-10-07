@@ -63,6 +63,29 @@ enum ManagerCommand {
     Shutdown,
 }
 
+/// A cancel reconciliation owns a shared lock while waiting for this reply.
+/// Recovery abandons the old worker, which may keep its response sender alive
+/// forever. Poll only to notice an actual sender replacement; elapsed time by
+/// itself must never fail a command that could still register a hotkey later.
+fn wait_for_cancel_response(
+    response: Receiver<Result<(), String>>,
+    sent_generation: u64,
+    current_generation: &AtomicU64,
+) -> Result<(), String> {
+    loop {
+        if current_generation.load(Ordering::SeqCst) != sent_generation {
+            return Err("Cancel shortcut command superseded by hook recovery".into());
+        }
+        match response.recv_timeout(std::time::Duration::from_millis(25)) {
+            Ok(result) => return result,
+            Err(mpsc::RecvTimeoutError::Timeout) => continue,
+            Err(mpsc::RecvTimeoutError::Disconnected) => {
+                return Err("Failed to receive cancel shortcut response".into());
+            }
+        }
+    }
+}
+
 /// State for the handy-keys shortcut manager
 pub struct HandyKeysState {
     /// Channel to send commands to the manager thread (wrapped in Mutex for Sync)
@@ -282,15 +305,25 @@ impl HandyKeysState {
     /// Register a shortcut binding
     pub fn register(&self, binding: &ShortcutBinding) -> Result<(), String> {
         let (tx, rx) = mpsc::channel();
-        self.command_sender
+        let sender = self
+            .command_sender
             .lock()
-            .map_err(|_| "Failed to lock command_sender")?
+            .map_err(|_| "Failed to lock command_sender")?;
+        // Sender and generation must describe the same worker. Recovery updates
+        // both under this lock, after it has installed the replacement sender.
+        let generation = super::HANDY_KEYS_GENERATION.load(Ordering::SeqCst);
+        sender
             .send(ManagerCommand::Register {
                 binding_id: binding.id.clone(),
                 hotkey_string: binding.current_binding.clone(),
                 response: tx,
             })
             .map_err(|_| "Failed to send register command")?;
+        drop(sender);
+
+        if binding.id == "cancel" {
+            return wait_for_cancel_response(rx, generation, &super::HANDY_KEYS_GENERATION);
+        }
 
         rx.recv()
             .map_err(|_| "Failed to receive register response")?
@@ -334,6 +367,9 @@ impl HandyKeysState {
         // Replace command_sender + thread_handle in place
         if let Ok(mut sender_guard) = self.command_sender.lock() {
             *sender_guard = new_tx;
+            // Publish only when requests can actually reach the new worker.
+            // MANAGER_GENERATION is bumped earlier to suppress stale events.
+            super::handy_keys_recreated(&app);
         }
         if let Ok(mut handle_guard) = self.thread_handle.lock() {
             *handle_guard = Some(new_handle);
@@ -346,14 +382,22 @@ impl HandyKeysState {
     /// Unregister a shortcut binding
     pub fn unregister(&self, binding: &ShortcutBinding) -> Result<(), String> {
         let (tx, rx) = mpsc::channel();
-        self.command_sender
+        let sender = self
+            .command_sender
             .lock()
-            .map_err(|_| "Failed to lock command_sender")?
+            .map_err(|_| "Failed to lock command_sender")?;
+        let generation = super::HANDY_KEYS_GENERATION.load(Ordering::SeqCst);
+        sender
             .send(ManagerCommand::Unregister {
                 binding_id: binding.id.clone(),
                 response: tx,
             })
             .map_err(|_| "Failed to send unregister command")?;
+        drop(sender);
+
+        if binding.id == "cancel" {
+            return wait_for_cancel_response(rx, generation, &super::HANDY_KEYS_GENERATION);
+        }
 
         rx.recv()
             .map_err(|_| "Failed to receive unregister response")?
@@ -599,51 +643,6 @@ pub fn init_shortcuts(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Register the cancel shortcut (called when recording starts)
-pub fn register_cancel_shortcut(app: &AppHandle) {
-    // Disabled on Linux due to instability
-    #[cfg(target_os = "linux")]
-    {
-        let _ = app;
-        return;
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    {
-        let app_clone = app.clone();
-        tauri::async_runtime::spawn(async move {
-            if let Some(cancel_binding) = get_settings(&app_clone).bindings.get("cancel").cloned() {
-                if let Some(state) = app_clone.try_state::<HandyKeysState>() {
-                    if let Err(e) = state.register(&cancel_binding) {
-                        error!("Failed to register cancel shortcut: {}", e);
-                    }
-                }
-            }
-        });
-    }
-}
-
-/// Unregister the cancel shortcut (called when recording stops)
-pub fn unregister_cancel_shortcut(app: &AppHandle) {
-    #[cfg(target_os = "linux")]
-    {
-        let _ = app;
-        return;
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    {
-        let app_clone = app.clone();
-        tauri::async_runtime::spawn(async move {
-            if let Some(cancel_binding) = get_settings(&app_clone).bindings.get("cancel").cloned() {
-                if let Some(state) = app_clone.try_state::<HandyKeysState>() {
-                    let _ = state.unregister(&cancel_binding);
-                }
-            }
-        });
-    }
-}
-
 /// Register a shortcut
 pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<(), String> {
     let state = app
@@ -713,4 +712,59 @@ pub fn stop_handy_keys_recording(app: AppHandle) -> Result<(), String> {
     let result = state.stop_recording();
     super::resume_all_shortcuts(&app);
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn abandoned_cancel_worker_releases_reconciliation_lock_after_sender_replacement() {
+        let generation = Arc::new(AtomicU64::new(1));
+        let reconciliation_lock = Arc::new(Mutex::new(()));
+        // Keep this sender alive: a disconnected-channel error would mask the bug.
+        let (_old_response_sender, old_response) = mpsc::channel();
+        let (started_tx, started_rx) = mpsc::channel();
+        let (finished_tx, finished_rx) = mpsc::channel();
+        let worker_generation = Arc::clone(&generation);
+        let worker_lock = Arc::clone(&reconciliation_lock);
+        let worker = thread::spawn(move || {
+            let _guard = worker_lock.lock().unwrap();
+            started_tx.send(()).unwrap();
+            let result = wait_for_cancel_response(old_response, 1, &worker_generation);
+            finished_tx.send(result).unwrap();
+        });
+        started_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        // A slow but still-current worker is not timed out into a late registration.
+        assert!(finished_rx.recv_timeout(Duration::from_millis(80)).is_err());
+        generation.store(2, Ordering::SeqCst);
+        let error = finished_rx
+            .recv_timeout(Duration::from_secs(2))
+            .unwrap()
+            .unwrap_err();
+        assert!(error.contains("superseded by hook recovery"));
+        worker.join().unwrap();
+
+        // Another cancel reconciliation can now acquire the same lock and finish.
+        let _guard = reconciliation_lock
+            .try_lock()
+            .expect("old waiter retained cancel lock");
+        let (new_response_sender, new_response) = mpsc::channel();
+        new_response_sender.send(Ok(())).unwrap();
+        assert!(wait_for_cancel_response(new_response, 2, &generation).is_ok());
+    }
+
+    #[test]
+    fn cancel_reply_from_current_worker_preserves_backend_error() {
+        let generation = AtomicU64::new(5);
+        let (sender, response) = mpsc::channel();
+        sender
+            .send(Err("key is already registered".into()))
+            .unwrap();
+        assert_eq!(
+            wait_for_cancel_response(response, 5, &generation),
+            Err("key is already registered".into())
+        );
+    }
 }

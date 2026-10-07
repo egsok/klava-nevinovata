@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "中国語の表記",
+        "description": "北京語と広東語の文字起こしを簡体字または繁体字で出力します。他の言語は変更されません。",
+        "options": {
+          "asTranscribed": "文字起こしのまま",
+          "simplified": "簡体字",
+          "traditional": "繁体字"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "再文字起こし",
       "retranscribeError": "再文字起こしに失敗しました。もう一度お試しください。",
       "transcribing": "文字起こし中…",
-      "transcriptionFailed": "文字起こしに失敗しました。リトライアイコンを使用して再文字起こしできます。"
+      "transcriptionFailed": "文字起こしに失敗しました。リトライアイコンを使用して再文字起こしできます。",
+      "copyError": "文字起こしをクリップボードにコピーできませんでした。"
     },
     "debug": {
       "title": "デバッグ",

@@ -411,6 +411,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "الكتابة الصينية",
+        "description": "يكتب نصوص الماندرين والكانتونية بالأحرف المبسطة أو التقليدية. لا تتغير اللغات الأخرى.",
+        "options": {
+          "asTranscribed": "كما نُسخ",
+          "simplified": "مبسطة",
+          "traditional": "تقليدية"
+        }
       }
     },
     "postProcessing": {
@@ -480,7 +489,8 @@
       "retranscribe": "إعادة النسخ",
       "retranscribeError": "فشلت إعادة النسخ. يرجى المحاولة مرة أخرى.",
       "transcribing": "جارٍ النسخ...",
-      "transcriptionFailed": "فشل النسخ. يمكنك إعادة النسخ باستخدام أيقونة إعادة المحاولة."
+      "transcriptionFailed": "فشل النسخ. يمكنك إعادة النسخ باستخدام أيقونة إعادة المحاولة.",
+      "copyError": "تعذر نسخ التفريغ إلى الحافظة."
     },
     "debug": {
       "title": "تصحيح الأخطاء",

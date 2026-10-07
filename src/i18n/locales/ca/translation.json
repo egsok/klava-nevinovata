@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Escriptura xinesa",
+        "description": "Escriu les transcripcions en mandarí i cantonès amb caràcters simplificats o tradicionals. Els altres idiomes no es modifiquen.",
+        "options": {
+          "asTranscribed": "Tal com s'ha transcrit",
+          "simplified": "Simplificat",
+          "traditional": "Tradicional"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Torneu a transcriure",
       "retranscribeError": "No s'ha pogut tornar a transcriure. Torneu-ho a provar.",
       "transcribing": "S'està transcrivint...",
-      "transcriptionFailed": "La transcripció ha fallat. Podeu tornar a transcriure amb la icona de reintent."
+      "transcriptionFailed": "La transcripció ha fallat. Podeu tornar a transcriure amb la icona de reintent.",
+      "copyError": "No s'ha pogut copiar la transcripció al porta-retalls."
     },
     "debug": {
       "title": "Depuració",

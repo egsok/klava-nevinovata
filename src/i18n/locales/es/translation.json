@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Escritura china",
+        "description": "Escribe las transcripciones en mandarín y cantonés con caracteres simplificados o tradicionales. Los demás idiomas no se modifican.",
+        "options": {
+          "asTranscribed": "Tal como se transcribió",
+          "simplified": "Simplificado",
+          "traditional": "Tradicional"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Re-transcribir",
       "retranscribeError": "No se pudo re-transcribir. Por favor, inténtalo de nuevo.",
       "transcribing": "Transcribiendo...",
-      "transcriptionFailed": "La transcripción falló. Puedes re-transcribir usando el icono de reintentar."
+      "transcriptionFailed": "La transcripción falló. Puedes re-transcribir usando el icono de reintentar.",
+      "copyError": "No se pudo copiar la transcripción al portapapeles."
     },
     "debug": {
       "title": "Depuración",

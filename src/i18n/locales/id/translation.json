@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Aksara Tionghoa",
+        "description": "Menulis transkripsi Mandarin dan Kanton dengan aksara Sederhana atau Tradisional. Bahasa lain tidak diubah.",
+        "options": {
+          "asTranscribed": "Sesuai transkripsi",
+          "simplified": "Sederhana",
+          "traditional": "Tradisional"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Transkripsikan ulang",
       "retranscribeError": "Gagal mentranskripsikan ulang. Silakan coba lagi.",
       "transcribing": "Mentranskripsikan...",
-      "transcriptionFailed": "Transkripsi gagal. Anda dapat mentranskripsikan ulang menggunakan ikon coba lagi."
+      "transcriptionFailed": "Transkripsi gagal. Anda dapat mentranskripsikan ulang menggunakan ikon coba lagi.",
+      "copyError": "Gagal menyalin transkripsi ke papan klip."
     },
     "debug": {
       "title": "Debug",

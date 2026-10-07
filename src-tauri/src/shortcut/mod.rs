@@ -16,14 +16,15 @@ pub mod tauri_impl;
 use log::{debug, error, info, warn};
 use serde::Serialize;
 use specta::Type;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager};
 
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
-    self, get_settings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LLMPrompt,
-    OverlayPosition, OverlayStyle, PasteMethod, ShortcutActivation, ShortcutBinding, SoundTheme,
-    Theme, TypingTool, VadBackend, APPLE_INTELLIGENCE_PROVIDER_ID,
+    self, get_settings, AutoSubmitKey, ChineseScript, ClipboardHandling, KeyboardImplementation,
+    LLMPrompt, OverlayPosition, OverlayStyle, PasteMethod, ShortcutActivation, ShortcutBinding,
+    SoundTheme, Theme, TypingTool, VadBackend, APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
 
@@ -55,27 +56,161 @@ pub fn init_shortcuts(app: &AppHandle) {
     }
 }
 
+/// Whether the recording lifecycle currently wants the cancel shortcut.
+/// Written synchronously by start/stop, so it always holds the latest request.
+static CANCEL_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// The actual registration, including the backend that owns it. A recreated
+/// hook has a new generation and no registrations from the previous hook.
+/// The lock also serializes reconciliation passes.
+#[cfg(not(target_os = "linux"))]
+static CANCEL_REGISTERED: std::sync::Mutex<Option<CancelRegistration>> =
+    std::sync::Mutex::new(None);
+
+#[cfg(not(target_os = "linux"))]
+static TAURI_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+static HANDY_KEYS_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn handy_keys_recreated(app: &AppHandle) {
+    HANDY_KEYS_GENERATION.fetch_add(1, Ordering::SeqCst);
+    schedule_cancel_reconcile(app);
+}
+
+#[cfg(not(target_os = "linux"))]
+#[derive(Clone)]
+struct CancelRegistration {
+    implementation: KeyboardImplementation,
+    binding: ShortcutBinding,
+    generation: u64,
+}
+
+#[cfg(not(target_os = "linux"))]
+fn cancel_backend_generation(implementation: KeyboardImplementation) -> u64 {
+    match implementation {
+        KeyboardImplementation::Tauri => TAURI_GENERATION.load(Ordering::SeqCst),
+        KeyboardImplementation::HandyKeys => HANDY_KEYS_GENERATION.load(Ordering::SeqCst),
+    }
+}
+
+/// Reconcile the actual owner before registering the latest requested binding.
+/// Failed operations leave the cache unchanged so a later request can retry.
+#[cfg(not(target_os = "linux"))]
+fn reconcile_cancel_registration(
+    registered: &mut Option<CancelRegistration>,
+    desired: Option<CancelRegistration>,
+    generation: impl Fn(KeyboardImplementation) -> u64,
+    mut apply: impl FnMut(&CancelRegistration, bool) -> Result<(), String>,
+) -> Result<(), String> {
+    if let Some(old) = registered
+        .as_ref()
+        .filter(|old| old.generation != generation(old.implementation))
+    {
+        // The backend API now points at the replacement hook. Clear any cancel
+        // registration that raced the replacement before registering it anew.
+        // Never send a command to the superseded, possibly stuck worker.
+        apply(old, false)?;
+        *registered = None;
+    }
+    if let (Some(old), Some(new)) = (registered.as_ref(), desired.as_ref()) {
+        if old.implementation == new.implementation
+            && old.generation == new.generation
+            && old.binding.current_binding == new.binding.current_binding
+        {
+            return Ok(());
+        }
+    }
+    if let Some(old) = registered.as_ref() {
+        apply(old, false)?;
+        *registered = None;
+    }
+    if let Some(new) = desired {
+        apply(&new, true)?;
+        *registered = Some(new);
+    }
+    Ok(())
+}
+
 /// Register the cancel shortcut (called when recording starts)
 pub fn register_cancel_shortcut(app: &AppHandle) {
     // Track recording lifecycle independently of the current implementation so
     // switching implementations mid-recording cannot leave stale fallback state.
     crate::secure_input::register_cancel_fallback(app);
 
-    let settings = get_settings(app);
-    match settings.keyboard_implementation {
-        KeyboardImplementation::Tauri => tauri_impl::register_cancel_shortcut(app),
-        KeyboardImplementation::HandyKeys => handy_keys::register_cancel_shortcut(app),
-    }
+    CANCEL_REQUESTED.store(true, Ordering::SeqCst);
+    schedule_cancel_reconcile(app);
 }
 
 /// Unregister the cancel shortcut (called when recording stops)
 pub fn unregister_cancel_shortcut(app: &AppHandle) {
     crate::secure_input::unregister_cancel_fallback(app);
 
-    let settings = get_settings(app);
-    match settings.keyboard_implementation {
-        KeyboardImplementation::Tauri => tauri_impl::unregister_cancel_shortcut(app),
-        KeyboardImplementation::HandyKeys => handy_keys::unregister_cancel_shortcut(app),
+    CANCEL_REQUESTED.store(false, Ordering::SeqCst);
+    schedule_cancel_reconcile(app);
+}
+
+/// Apply the requested cancel state off the calling thread. Start and stop run
+/// on the shortcut handler thread, which must not block on registration, so the
+/// work is spawned. Spawned tasks may run in any order (a very short recording
+/// can see its unregister task run before its register task), so each pass
+/// applies the latest request instead of the action that scheduled it.
+fn schedule_cancel_reconcile(app: &AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        reconcile_cancel_shortcut(&app);
+    });
+}
+
+fn reconcile_cancel_shortcut(app: &AppHandle) {
+    // Cancel shortcut is disabled on Linux due to instability with dynamic shortcut registration
+    #[cfg(target_os = "linux")]
+    {
+        let _ = app;
+        return;
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        let mut registered = CANCEL_REGISTERED.lock().unwrap_or_else(|e| e.into_inner());
+        let settings = get_settings(app);
+        let desired = if CANCEL_REQUESTED.load(Ordering::SeqCst) {
+            settings
+                .bindings
+                .get("cancel")
+                .cloned()
+                .map(|binding| CancelRegistration {
+                    implementation: settings.keyboard_implementation,
+                    generation: cancel_backend_generation(settings.keyboard_implementation),
+                    binding,
+                })
+        } else {
+            None
+        };
+        let result = reconcile_cancel_registration(
+            &mut registered,
+            desired,
+            cancel_backend_generation,
+            |registration, register| {
+                let binding = registration.binding.clone();
+                match (registration.implementation, register) {
+                    (KeyboardImplementation::Tauri, true) => {
+                        tauri_impl::register_shortcut(app, binding)
+                    }
+                    (KeyboardImplementation::Tauri, false) => {
+                        tauri_impl::unregister_shortcut(app, binding)
+                    }
+                    (KeyboardImplementation::HandyKeys, true) => {
+                        handy_keys::register_shortcut(app, binding)
+                    }
+                    (KeyboardImplementation::HandyKeys, false) => {
+                        handy_keys::unregister_shortcut(app, binding)
+                    }
+                }
+            },
+        );
+        if let Err(e) = result {
+            error!("Failed to reconcile cancel shortcut: {}", e);
+        }
     }
 }
 
@@ -108,9 +243,13 @@ pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
             #[cfg(not(target_os = "linux"))]
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;
-                let _ = app.global_shortcut().unregister_all();
+                app.global_shortcut()
+                    .unregister_all()
+                    .map_err(|e| e.to_string())?;
+                TAURI_GENERATION.fetch_add(1, Ordering::SeqCst);
             }
             tauri_impl::init_shortcuts(app);
+            schedule_cancel_reconcile(app);
             Ok(())
         }
         KeyboardImplementation::HandyKeys => handy_keys::force_reinit(app),
@@ -179,6 +318,7 @@ pub fn change_binding(
                 s.bindings.insert(id.clone(), inserted);
             });
             crate::secure_input::reconcile_fallback(&app);
+            schedule_cancel_reconcile(&app);
             return Ok(BindingResponse {
                 success: true,
                 binding: Some(b.clone()),
@@ -246,7 +386,7 @@ fn restore_registration(app: &AppHandle, binding: &ShortcutBinding) {
 #[tauri::command]
 #[specta::specta]
 pub fn reset_binding(app: AppHandle, id: String) -> Result<BindingResponse, String> {
-    let binding = settings::get_stored_binding(&app, &id);
+    let binding = settings::get_stored_binding(&settings::get_settings(&app), &id)?;
     change_binding(app, id, binding.default_binding)
 }
 
@@ -355,7 +495,15 @@ pub fn change_keyboard_implementation_setting(
     }
 
     // Initialize new implementation if needed (HandyKeys needs state)
-    if new_impl == KeyboardImplementation::HandyKeys && initialize_handy_keys_with_rollback(&app)? {
+    let initialized = if new_impl == KeyboardImplementation::HandyKeys {
+        let result = initialize_handy_keys_with_rollback(&app);
+        // Also reconcile after rollback if initialization failed.
+        schedule_cancel_reconcile(&app);
+        result?
+    } else {
+        false
+    };
+    if initialized {
         // Shortcuts already registered during init.
         crate::secure_input::reconcile_fallback(&app);
         return Ok(ImplementationChangeResult {
@@ -367,6 +515,7 @@ pub fn change_keyboard_implementation_setting(
     // Register all shortcuts with new implementation, resetting invalid ones
     let reset_bindings = register_all_shortcuts_for_implementation(&app, new_impl);
     crate::secure_input::reconcile_fallback(&app);
+    schedule_cancel_reconcile(&app);
 
     // Emit event to notify frontend of the change
     let _ = app.emit(
@@ -1288,6 +1437,13 @@ pub fn change_filler_word_removal_enabled_setting(
 
 #[tauri::command]
 #[specta::specta]
+pub fn change_chinese_script_setting(app: AppHandle, script: ChineseScript) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.chinese_script = script);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn change_app_language_setting(app: AppHandle, language: String) -> Result<(), String> {
     settings::update_settings(&app, |s| s.app_language = language.clone());
 
@@ -1359,4 +1515,146 @@ pub async fn get_available_accelerators() -> crate::managers::transcription::Ava
     tauri::async_runtime::spawn_blocking(crate::managers::transcription::get_available_accelerators)
         .await
         .expect("get_available_accelerators panicked")
+}
+
+#[cfg(test)]
+mod tests {
+    use handy_keys::Hotkey;
+    use tauri_plugin_global_shortcut::Shortcut;
+
+    #[cfg(not(target_os = "linux"))]
+    fn cancel_registration(
+        implementation: super::KeyboardImplementation,
+        generation: u64,
+        key: &str,
+    ) -> super::CancelRegistration {
+        super::CancelRegistration {
+            implementation,
+            generation,
+            binding: crate::settings::ShortcutBinding {
+                id: "cancel".into(),
+                name: "Cancel".into(),
+                description: String::new(),
+                default_binding: "escape".into(),
+                current_binding: key.into(),
+            },
+        }
+    }
+
+    #[test]
+    #[cfg(not(target_os = "linux"))]
+    fn cancel_hook_recreation_clears_racing_registration_before_registering_again() {
+        use super::{reconcile_cancel_registration, KeyboardImplementation::HandyKeys};
+        let mut registered = Some(cancel_registration(HandyKeys, 1, "escape"));
+        let mut actions = Vec::new();
+        reconcile_cancel_registration(
+            &mut registered,
+            Some(cancel_registration(HandyKeys, 2, "escape")),
+            |_| 2,
+            |registration, register| {
+                actions.push((registration.generation, register));
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(actions, vec![(1, false), (2, true)]);
+        assert_eq!(registered.unwrap().generation, 2);
+    }
+
+    #[test]
+    #[cfg(not(target_os = "linux"))]
+    fn cancel_switch_unregisters_from_actual_old_backend_before_registering_new() {
+        use super::{
+            reconcile_cancel_registration,
+            KeyboardImplementation::{HandyKeys, Tauri},
+        };
+        let mut registered = Some(cancel_registration(HandyKeys, 1, "escape"));
+        let mut actions = Vec::new();
+        reconcile_cancel_registration(
+            &mut registered,
+            Some(cancel_registration(Tauri, 1, "escape")),
+            |_| 1,
+            |registration, register| {
+                actions.push((registration.implementation, register));
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert_eq!(actions, vec![(HandyKeys, false), (Tauri, true)]);
+    }
+
+    #[test]
+    #[cfg(not(target_os = "linux"))]
+    fn cancel_binding_edit_removes_original_key_and_stop_removes_latest_key() {
+        use super::{reconcile_cancel_registration, KeyboardImplementation::HandyKeys};
+        let mut registered = Some(cancel_registration(HandyKeys, 1, "escape"));
+        let mut actions = Vec::new();
+        let mut apply = |registration: &super::CancelRegistration, register| {
+            actions.push((registration.binding.current_binding.clone(), register));
+            Ok(())
+        };
+        reconcile_cancel_registration(
+            &mut registered,
+            Some(cancel_registration(HandyKeys, 1, "f12")),
+            |_| 1,
+            &mut apply,
+        )
+        .unwrap();
+        // Both delayed start/stop tasks see the latest request (stopped).
+        reconcile_cancel_registration(&mut registered, None, |_| 1, &mut apply).unwrap();
+        reconcile_cancel_registration(&mut registered, None, |_| 1, &mut apply).unwrap();
+        assert!(registered.is_none());
+        assert_eq!(
+            actions,
+            vec![
+                ("escape".into(), false),
+                ("f12".into(), true),
+                ("f12".into(), false)
+            ]
+        );
+    }
+
+    #[test]
+    #[cfg(not(target_os = "linux"))]
+    fn cancel_failed_unregister_keeps_owner_for_retry() {
+        use super::{reconcile_cancel_registration, KeyboardImplementation::HandyKeys};
+        let mut registered = Some(cancel_registration(HandyKeys, 1, "escape"));
+        assert!(reconcile_cancel_registration(
+            &mut registered,
+            None,
+            |_| 1,
+            |_, _| Err("backend unavailable".into())
+        )
+        .is_err());
+        assert!(registered.is_some());
+        let mut retried = false;
+        reconcile_cancel_registration(
+            &mut registered,
+            None,
+            |_| 1,
+            |_, register| {
+                assert!(!register);
+                retried = true;
+                Ok(())
+            },
+        )
+        .unwrap();
+        assert!(retried);
+        assert!(registered.is_none());
+    }
+
+    #[test]
+    fn compound_shortcut_keys_parse_on_both_backends() {
+        for key in [
+            "scrolllock",
+            "capslock",
+            "numlock",
+            "pageup",
+            "pagedown",
+            "printscreen",
+        ] {
+            assert!(key.parse::<Shortcut>().is_ok(), "Tauri rejected {key}");
+            assert!(key.parse::<Hotkey>().is_ok(), "HandyKeys rejected {key}");
+        }
+    }
 }

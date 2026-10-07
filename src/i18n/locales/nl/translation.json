@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Chinees schrift",
+        "description": "Schrijft Mandarijn- en Kantonese transcripties in vereenvoudigde of traditionele karakters. Andere talen blijven ongewijzigd.",
+        "options": {
+          "asTranscribed": "Zoals getranscribeerd",
+          "simplified": "Vereenvoudigd",
+          "traditional": "Traditioneel"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Opnieuw transcriberen",
       "retranscribeError": "Opnieuw transcriberen mislukt. Probeer het opnieuw.",
       "transcribing": "Transcriberen...",
-      "transcriptionFailed": "Transcriptie mislukt. Je kunt het opnieuw proberen via het herlaad-pictogram."
+      "transcriptionFailed": "Transcriptie mislukt. Je kunt het opnieuw proberen via het herlaad-pictogram.",
+      "copyError": "Transcriptie naar het klembord kopiëren mislukt."
     },
     "debug": {
       "title": "Probleemoplossing",

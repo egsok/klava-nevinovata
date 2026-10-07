@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "중국어 간체/번체",
+        "description": "표준 중국어와 광둥어 전사를 간체 또는 번체로 표기합니다. 다른 언어는 변경되지 않습니다.",
+        "options": {
+          "asTranscribed": "전사된 그대로",
+          "simplified": "간체",
+          "traditional": "번체"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "다시 전사",
       "retranscribeError": "다시 전사에 실패했습니다. 다시 시도해주세요.",
       "transcribing": "전사 중...",
-      "transcriptionFailed": "전사에 실패했습니다. 재시도 아이콘을 사용하여 다시 전사할 수 있습니다."
+      "transcriptionFailed": "전사에 실패했습니다. 재시도 아이콘을 사용하여 다시 전사할 수 있습니다.",
+      "copyError": "전사 내용을 클립보드에 복사하지 못했습니다."
     },
     "debug": {
       "title": "디버그",

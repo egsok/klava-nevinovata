@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Kinesisk skrift",
+        "description": "Skriver mandarin- og kantonesisk-transskriptioner med forenklede eller traditionelle tegn. Andre sprog ændres ikke.",
+        "options": {
+          "asTranscribed": "Som transskriberet",
+          "simplified": "Forenklet",
+          "traditional": "Traditionel"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Transskribér igen",
       "retranscribeError": "Kunne ikke transskribere igen. Prøv igen.",
       "transcribing": "Transskriberer...",
-      "transcriptionFailed": "Transskription mislykkedes. Du kan transskribere igen ved hjælp af genforsøgsikonet."
+      "transcriptionFailed": "Transskription mislykkedes. Du kan transskribere igen ved hjælp af genforsøgsikonet.",
+      "copyError": "Kunne ikke kopiere transskriptionen til udklipsholderen."
     },
     "debug": {
       "title": "Fejlfinding",

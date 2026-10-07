@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Çince yazı",
+        "description": "Mandarin ve Kantonca transkripsiyonları Basitleştirilmiş veya Geleneksel karakterlerle yazar. Diğer diller değiştirilmez.",
+        "options": {
+          "asTranscribed": "Transkripsiyondaki gibi",
+          "simplified": "Basitleştirilmiş",
+          "traditional": "Geleneksel"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Yeniden transkribe et",
       "retranscribeError": "Yeniden transkripsiyon başarısız oldu. Lütfen tekrar deneyin.",
       "transcribing": "Transkribe ediliyor...",
-      "transcriptionFailed": "Transkripsiyon başarısız oldu. Yeniden deneme simgesini kullanarak tekrar transkribe edebilirsiniz."
+      "transcriptionFailed": "Transkripsiyon başarısız oldu. Yeniden deneme simgesini kullanarak tekrar transkribe edebilirsiniz.",
+      "copyError": "Transkripsiyon panoya kopyalanamadı."
     },
     "debug": {
       "title": "Hata Ayıklama",

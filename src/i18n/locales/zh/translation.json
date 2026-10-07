@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "简繁转换",
+        "description": "将普通话和粤语转录输出为简体或繁体中文。其他语言不受影响。",
+        "options": {
+          "asTranscribed": "保持原样",
+          "simplified": "简体",
+          "traditional": "繁体"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "重新转录",
       "retranscribeError": "重新转录失败。请重试。",
       "transcribing": "转录中...",
-      "transcriptionFailed": "转录失败。您可以使用重试图标重新转录。"
+      "transcriptionFailed": "转录失败。您可以使用重试图标重新转录。",
+      "copyError": "无法将转录复制到剪贴板。"
     },
     "debug": {
       "title": "调试",

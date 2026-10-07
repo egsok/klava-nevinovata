@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "כתב סיני",
+        "description": "כותב תמלולים במנדרינית ובקנטונזית בתווים מפושטים או מסורתיים. שפות אחרות נשארות ללא שינוי.",
+        "options": {
+          "asTranscribed": "כפי שתומלל",
+          "simplified": "מפושט",
+          "traditional": "מסורתי"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "תמלל מחדש",
       "retranscribeError": "תמלול מחדש נכשל. נסה שוב.",
       "transcribing": "מתמלל...",
-      "transcriptionFailed": "התמלול נכשל. אפשר לתמלל מחדש באמצעות אייקון הניסיון החוזר."
+      "transcriptionFailed": "התמלול נכשל. אפשר לתמלל מחדש באמצעות אייקון הניסיון החוזר.",
+      "copyError": "לא ניתן להעתיק את התמלול ללוח."
     },
     "debug": {
       "title": "ניפוי שגיאות",

@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Pismo chińskie",
+        "description": "Zapisuje transkrypcje w języku mandaryńskim i kantońskim znakami uproszczonymi lub tradycyjnymi. Inne języki pozostają bez zmian.",
+        "options": {
+          "asTranscribed": "Jak w transkrypcji",
+          "simplified": "Uproszczone",
+          "traditional": "Tradycyjne"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Transkrybuj ponownie",
       "retranscribeError": "Nie udało się ponownie transkrybować. Spróbuj ponownie.",
       "transcribing": "Transkrybuję...",
-      "transcriptionFailed": "Transkrypcja nie powiodła się. Możesz transkrybować ponownie za pomocą ikony ponowienia."
+      "transcriptionFailed": "Transkrypcja nie powiodła się. Możesz transkrybować ponownie za pomocą ikony ponowienia.",
+      "copyError": "Nie udało się skopiować transkrypcji do schowka."
     },
     "debug": {
       "title": "Debugowanie",

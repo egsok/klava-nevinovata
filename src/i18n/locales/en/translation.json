@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Chinese Script",
+        "description": "Writes Mandarin and Cantonese transcriptions in Simplified or Traditional characters. Other languages are left unchanged.",
+        "options": {
+          "asTranscribed": "As Transcribed",
+          "simplified": "Simplified",
+          "traditional": "Traditional"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Re-transcribe",
       "retranscribeError": "Failed to re-transcribe. Please try again.",
       "transcribing": "Transcribing...",
-      "transcriptionFailed": "Transcription failed. You can re-transcribe using the retry icon."
+      "transcriptionFailed": "Transcription failed. You can re-transcribe using the retry icon.",
+      "copyError": "Failed to copy transcription to clipboard."
     },
     "debug": {
       "title": "Debug",

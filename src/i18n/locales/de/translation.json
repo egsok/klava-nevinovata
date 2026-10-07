@@ -434,6 +434,15 @@
           "silero": "Silero",
           "earshot": "Earshot"
         }
+      },
+      "chineseScript": {
+        "title": "Chinesische Schrift",
+        "description": "Schreibt Transkriptionen auf Mandarin und Kantonesisch in vereinfachten oder traditionellen Schriftzeichen. Andere Sprachen bleiben unverändert.",
+        "options": {
+          "asTranscribed": "Wie transkribiert",
+          "simplified": "Vereinfacht",
+          "traditional": "Traditionell"
+        }
       }
     },
     "postProcessing": {
@@ -503,7 +512,8 @@
       "retranscribe": "Erneut transkribieren",
       "retranscribeError": "Erneute Transkription fehlgeschlagen. Bitte versuche es erneut.",
       "transcribing": "Transkribiere...",
-      "transcriptionFailed": "Transkription fehlgeschlagen. Du kannst über das Wiederholen-Symbol erneut transkribieren."
+      "transcriptionFailed": "Transkription fehlgeschlagen. Du kannst über das Wiederholen-Symbol erneut transkribieren.",
+      "copyError": "Transkription konnte nicht in die Zwischenablage kopiert werden."
     },
     "debug": {
       "title": "Debug",

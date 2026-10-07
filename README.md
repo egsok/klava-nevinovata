@@ -109,6 +109,16 @@ Other open experiments:
 - [press-1](https://github.com/egsok/press-1) — answer Claude Code permission prompts with one keypress from any window.
 - [napotom](https://github.com/egsok/napotom) — a desktop video downloader and friendly GUI for yt-dlp.
 
+## Linux: empty recording overlay on Hyprland / Omarchy
+
+If the recording overlay is empty or bordered, fully quit the app and launch a native installation with Wayland enabled:
+
+```bash
+env -u HANDY_NO_GTK_LAYER_SHELL GDK_BACKEND=wayland handy
+```
+
+If this works, apply `GDK_BACKEND=wayland` only to this app's launcher. This workaround does not work with the upstream 0.9.6 AppImage, which forces X11.
+
 ## License
 
 MIT, inherited from cjpais/Handy — see [LICENSE](LICENSE). Original work © cjpais and contributors. Fork changes © 2026 Egor Sokolov.
