@@ -546,6 +546,10 @@
         "title": "Word Correction Threshold",
         "description": "Sensitivity for custom word corrections"
       },
+      "rmsSilenceThreshold": {
+        "title": "Silence Detection Threshold",
+        "description": "Minimum audio loudness (RMS) required to attempt transcription. Lower it if a quiet microphone gets skipped as silence."
+      },
       "historyLimit": {
         "title": "History Limit",
         "description": "Maximum number of history entries to keep",

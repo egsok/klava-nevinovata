@@ -1198,14 +1198,18 @@ impl TranscriptionManager {
             return Ok(String::new());
         }
 
+        // Get current settings for configuration
+        let settings = get_settings(&self.app_handle);
+
         // Near-silent audio makes whisper-family models hallucinate plausible
-        // phrases; skip it before it ever reaches the engine.
-        const RMS_SILENCE_THRESHOLD: f32 = 0.005;
+        // phrases; skip it before it ever reaches the engine. Tunable per
+        // device — some microphones sit close to the historical hardcoded
+        // 0.005 default and get their real speech skipped as silence.
         let rms = (audio.iter().map(|&s| s * s).sum::<f32>() / audio.len() as f32).sqrt();
-        if rms < RMS_SILENCE_THRESHOLD {
+        if rms < settings.rms_silence_threshold {
             debug!(
                 "Audio RMS {:.6} below silence threshold {:.4}; skipping transcription",
-                rms, RMS_SILENCE_THRESHOLD
+                rms, settings.rms_silence_threshold
             );
             self.maybe_unload_immediately("silent audio");
             return Ok(String::new());
@@ -1224,9 +1228,6 @@ impl TranscriptionManager {
                 return Err(anyhow::anyhow!("Model is not loaded for transcription."));
             }
         }
-
-        // Get current settings for configuration
-        let settings = get_settings(&self.app_handle);
 
         // Validate selected language against the model's supported languages.
         // If the language isn't supported, fall back to "auto" to prevent errors.

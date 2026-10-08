@@ -433,6 +433,8 @@ pub struct AppSettings {
     pub model_unload_timeout: ModelUnloadTimeout,
     #[serde(default = "default_word_correction_threshold")]
     pub word_correction_threshold: f64,
+    #[serde(default = "default_rms_silence_threshold")]
+    pub rms_silence_threshold: f32,
     #[serde(default = "default_history_limit")]
     pub history_limit: usize,
     #[serde(default = "default_recording_retention_period")]
@@ -601,6 +603,13 @@ fn default_log_level() -> LogLevel {
 
 fn default_word_correction_threshold() -> f64 {
     0.18
+}
+
+/// Matches transcription::RMS_SILENCE_THRESHOLD's original hardcoded value —
+/// near-silent audio still gets skipped by default, but the level is now
+/// tunable for quiet input devices.
+fn default_rms_silence_threshold() -> f32 {
+    0.005
 }
 
 fn default_paste_delay_ms() -> u64 {
@@ -944,6 +953,7 @@ pub fn get_default_settings() -> AppSettings {
         custom_words: Vec::new(),
         model_unload_timeout: ModelUnloadTimeout::default(),
         word_correction_threshold: default_word_correction_threshold(),
+        rms_silence_threshold: default_rms_silence_threshold(),
         history_limit: default_history_limit(),
         recording_retention_period: default_recording_retention_period(),
         paste_method: PasteMethod::default(),
