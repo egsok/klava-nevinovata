@@ -32,7 +32,12 @@ jobs:
           script: |
             const fs = require('node:fs');
             const version = '${{ steps.get-version.outputs.version }}';
-            const body = fs.readFileSync(`RELEASE-NOTES-v${version}.md`, 'utf8');
+            const notes = fs.readFileSync(`RELEASE-NOTES-v${version}.md`, 'utf8');
+            // Every release ends with the same "which file to download" guide,
+            // so per-version notes only describe what changed.
+            const guide = fs.readFileSync('.github/release-download-guide.md', 'utf8')
+              .replaceAll('{{VERSION}}', version);
+            const body = `${notes.trimEnd()}\n\n${guide}`;
             // A failed build leaves its draft behind. Resume it without moving the tag.
             const releases = await github.paginate(github.rest.repos.listReleases, {
               owner: context.repo.owner,

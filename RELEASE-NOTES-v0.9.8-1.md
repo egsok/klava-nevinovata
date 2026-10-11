@@ -16,23 +16,13 @@
 
 Настройки, загруженные модели и история сохраняются. На Windows версия несколько дней проверялась в обычной работе. Сборки macOS и Linux доступны, но не проходили такую же пользовательскую проверку.
 
-## ⚠️ Для пользователей macOS
-
-Сборки не подписаны сертификатом Apple Developer. После перетаскивания `klava-nevinovata.app` в «Программы» один раз снимите карантинный атрибут в Терминале, иначе macOS может ошибочно сообщить, что приложение повреждено:
-
-```bash
-sudo xattr -dr com.apple.quarantine /Applications/klava-nevinovata.app
-```
-
-Терминал попросит пароль от Mac; символы при вводе не отображаются. После обновления macOS может заново запросить разрешения на микрофон и Универсальный доступ — выдайте их ещё раз.
-
 ## Как обновиться
 
 В установленной версии 0.9.5-3 или новее нажмите **«Проверить обновления» → «Доступно обновление»** внизу окна. Загрузка и установка начинаются после вашего нажатия.
 
 **Portable-версию обновляйте вручную:** закройте приложение, замените файлы в той же папке и сохраните `Data/` с настройками, моделями и записями.
 
-Установщики не подписаны сертификатом Windows; если SmartScreen покажет предупреждение, инструкция первого запуска — в [README](https://github.com/egsok/klava-nevinovata#download).
+Новая установка — ниже, в разделе «Какой файл скачать».
 
 ---
 
@@ -54,20 +44,10 @@ Based on Handy 0.9.8, with fixes for shortcuts, recording without a loaded model
 
 Settings, downloaded models, and history are preserved. This version has been tested in daily use on Windows for several days. macOS and Linux builds have not received the same hands-on validation.
 
-## ⚠️ Note for macOS users
-
-Builds are not signed with an Apple Developer ID. After dragging `klava-nevinovata.app` into Applications, clear the quarantine flag once in Terminal, otherwise macOS may incorrectly report that the app is damaged:
-
-```bash
-sudo xattr -dr com.apple.quarantine /Applications/klava-nevinovata.app
-```
-
-Terminal asks for your Mac password; nothing is shown while you type it. After an update, macOS may ask for Microphone and Accessibility permissions again — grant them once more.
-
 ## Updating
 
 In an installed copy of 0.9.5-3 or newer, click **Check for updates → Update available** at the bottom of the window. Downloading and installation start after your click.
 
 **Update portable copies manually:** quit the app, replace the files in the same folder, and keep `Data/` with your settings, models, and recordings.
 
-Installers are not Windows code-signed. If SmartScreen shows a warning, see the [README](https://github.com/egsok/klava-nevinovata#download) for first-launch instructions.
+For a new installation, see "Which file to download" below.
