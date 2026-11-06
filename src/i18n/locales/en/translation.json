@@ -985,7 +985,7 @@
     "modelLoadFailedTitle": "Failed to Load Model",
     "modelDownloadFailed": "Download failed",
     "clipboardBusyTitle": "Clipboard Busy",
-    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
+    "clipboardBusy": "Text could not be pasted: pasting did not finish in time or the clipboard is busy. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Failed to Paste Text",
     "pasteFailed": "Text could not be pasted into the active application.",
     "postProcessFailedTitle": "Pasted Without Post-Processing",

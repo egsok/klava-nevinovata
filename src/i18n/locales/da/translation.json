@@ -985,7 +985,7 @@
     "modelLoadFailedTitle": "Kunne ikke indlæse model",
     "modelDownloadFailed": "Download mislykkedes",
     "clipboardBusyTitle": "Clipboard Busy",
-    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
+    "clipboardBusy": "Text could not be pasted: pasting did not finish in time or the clipboard is busy. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Kunne ikke indsætte tekst",
     "pasteFailed": "Teksten kunne ikke indsættes i det aktive program.",
     "postProcessFailedTitle": "Indsat uden efterbehandling",

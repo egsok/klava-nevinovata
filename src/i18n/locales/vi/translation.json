@@ -985,7 +985,7 @@
     "modelLoadFailedTitle": "Không thể tải mô hình",
     "modelDownloadFailed": "Tải xuống thất bại",
     "clipboardBusyTitle": "Clipboard Busy",
-    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
+    "clipboardBusy": "Text could not be pasted: pasting did not finish in time or the clipboard is busy. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Không thể dán văn bản",
     "pasteFailed": "Không thể dán văn bản vào ứng dụng đang hoạt động.",
     "postProcessFailedTitle": "Đã dán không qua xử lý sau",

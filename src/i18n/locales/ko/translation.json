@@ -985,7 +985,7 @@
     "modelLoadFailedTitle": "모델을 불러오지 못했습니다",
     "modelDownloadFailed": "다운로드 실패",
     "clipboardBusyTitle": "Clipboard Busy",
-    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
+    "clipboardBusy": "Text could not be pasted: pasting did not finish in time or the clipboard is busy. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "텍스트 붙여넣기 실패",
     "pasteFailed": "활성 애플리케이션에 텍스트를 붙여넣을 수 없습니다.",
     "postProcessFailedTitle": "후처리 없이 붙여넣음",

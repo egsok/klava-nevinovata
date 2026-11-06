@@ -985,7 +985,7 @@
     "modelLoadFailedTitle": "加载模型失败",
     "modelDownloadFailed": "下载失败",
     "clipboardBusyTitle": "Clipboard Busy",
-    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
+    "clipboardBusy": "Text could not be pasted: pasting did not finish in time or the clipboard is busy. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "粘贴文本失败",
     "pasteFailed": "无法将文本粘贴到当前活动的应用程序中。",
     "postProcessFailedTitle": "已粘贴，未经后处理",

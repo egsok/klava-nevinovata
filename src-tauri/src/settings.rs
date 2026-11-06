@@ -6,6 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use specta::Type;
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
@@ -1182,7 +1183,20 @@ fn get_settings_locked(app: &AppHandle, _guard: &MutexGuard<'_, ()>) -> AppSetti
         store.set("settings", serde_json::to_value(&settings).unwrap());
     }
 
+    HANDY_KEYS_SELECTED.store(
+        settings.keyboard_implementation == KeyboardImplementation::HandyKeys,
+        Ordering::Release,
+    );
     settings
+}
+
+// Refreshed under SETTINGS_WRITE_LOCK after every completed read/write. The
+// watchdog must not wait for this lock or store I/O just to select a monitor.
+// Before the first settings load, no manager is eligible for monitoring.
+static HANDY_KEYS_SELECTED: AtomicBool = AtomicBool::new(false);
+
+pub(crate) fn handy_keys_selected() -> bool {
+    HANDY_KEYS_SELECTED.load(Ordering::Acquire)
 }
 
 /// Serializes the read-modify-write of the settings store across the whole
@@ -1469,6 +1483,10 @@ fn write_settings(app: &AppHandle, settings: AppSettings, _guard: &MutexGuard<'_
         .expect("Failed to initialize store");
 
     store.set("settings", serde_json::to_value(&settings).unwrap());
+    HANDY_KEYS_SELECTED.store(
+        settings.keyboard_implementation == KeyboardImplementation::HandyKeys,
+        Ordering::Release,
+    );
 }
 
 pub fn get_bindings(app: &AppHandle) -> HashMap<String, ShortcutBinding> {
@@ -1498,6 +1516,21 @@ pub fn get_recording_retention_period(app: &AppHandle) -> RecordingRetentionPeri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn watchdog_backend_snapshot_does_not_wait_for_settings_writer() {
+        let guard = SETTINGS_WRITE_LOCK.lock().unwrap();
+        let expected = HANDY_KEYS_SELECTED.load(Ordering::Acquire);
+        let (sent, received) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            sent.send(handy_keys_selected()).unwrap();
+        });
+        let result = received.recv_timeout(std::time::Duration::from_secs(1));
+        // A regression must fail without leaving the reader blocked forever.
+        drop(guard);
+        reader.join().unwrap();
+        assert_eq!(result.unwrap(), expected);
+    }
 
     #[test]
     fn spoken_language_migration_and_salvage_preserve_fork_recording_policy() {

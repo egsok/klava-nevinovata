@@ -400,7 +400,11 @@ impl TranscriptionJobManager {
         }
 
         let control = Control {
-            manager: self,
+            jobs: &self.jobs,
+            dictation_in_progress: &|| crate::tray::dictation_in_progress(&self.app),
+            emit_progress: &|percent| {
+                self.emit(entry.id, TranscriptionJobStatus::Running { percent });
+            },
             entry_id: entry.id,
             cancelled,
             percent: Cell::new(0),
@@ -460,7 +464,9 @@ fn crashed(payload: &(dyn std::any::Any + Send)) -> anyhow::Error {
 }
 
 struct Control<'a> {
-    manager: &'a TranscriptionJobManager,
+    jobs: &'a Mutex<Jobs>,
+    dictation_in_progress: &'a dyn Fn() -> bool,
+    emit_progress: &'a dyn Fn(u8),
     entry_id: i64,
     cancelled: &'a AtomicBool,
     /// The last percent reported; the job starts at 0.
@@ -469,7 +475,11 @@ struct Control<'a> {
 
 impl ChunkControl for Control<'_> {
     fn started(&self, whole_clip: bool) {
-        if let Some(running) = self.manager.lock().running.as_mut() {
+        let mut jobs = self
+            .jobs
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(running) = jobs.running.as_mut() {
             if running.entry_id == self.entry_id {
                 running.whole_clip = whole_clip;
             }
@@ -483,7 +493,7 @@ impl ChunkControl for Control<'_> {
             if self.cancelled.load(Ordering::Acquire) {
                 return false;
             }
-            if !crate::tray::dictation_in_progress(&self.manager.app) {
+            if !(self.dictation_in_progress)() {
                 return true;
             }
             thread::sleep(DICTATION_POLL);
@@ -499,14 +509,66 @@ impl ChunkControl for Control<'_> {
         if self.percent.replace(percent) == percent {
             return;
         }
-        self.manager
-            .emit(self.entry_id, TranscriptionJobStatus::Running { percent });
+        (self.emit_progress)(percent);
     }
 }
 
 #[cfg(test)]
 mod import_tests {
     use super::*;
+
+    #[test]
+    fn control_started_sets_cancel_policy_for_only_its_running_job() {
+        for (entry_id, whole_clip, dictation, expected_interrupts) in [
+            (1, true, false, 1),
+            (1, true, true, 0),
+            (1, false, false, 0),
+            (2, true, false, 0),
+        ] {
+            let cancelled = Arc::new(AtomicBool::new(false));
+            let jobs = Mutex::new(Jobs {
+                running: Some(Running {
+                    entry_id: 1,
+                    cancelled: Arc::clone(&cancelled),
+                    whole_clip: entry_id == 1 && !whole_clip,
+                }),
+                ..Jobs::default()
+            });
+            let progress = Cell::new(0);
+            let control = Control {
+                jobs: &jobs,
+                dictation_in_progress: &|| dictation,
+                emit_progress: &|percent| progress.set(percent),
+                entry_id,
+                cancelled: &cancelled,
+                percent: Cell::new(0),
+            };
+            control.started(whole_clip);
+            if !dictation {
+                assert!(control.proceed());
+            }
+            control.progress(1, 4);
+            assert_eq!(progress.get(), 25);
+            let interrupts = Cell::new(0);
+            jobs.lock()
+                .unwrap()
+                .running
+                .as_ref()
+                .unwrap()
+                .cancel(dictation, || {
+                    interrupts.set(interrupts.get() + 1);
+                });
+            assert!(cancelled.load(Ordering::Acquire));
+            assert_eq!(interrupts.get(), expected_interrupts);
+            assert!(!control.proceed());
+            control.progress(1, 1);
+            assert_eq!(
+                progress.get(),
+                25,
+                "cancelled jobs must not report progress"
+            );
+        }
+    }
 
     #[test]
     fn cancelling_whole_retry_interrupts_engine_only_without_dictation() {

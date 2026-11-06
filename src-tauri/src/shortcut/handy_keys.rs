@@ -562,11 +562,23 @@ pub fn validate_shortcut(raw: &str) -> Result<(), String> {
 /// Used by the "Re-register Hotkeys" tray recovery action when the hook
 /// has gotten into a stuck state.
 pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
-    let Some(state) = app.try_state::<HandyKeysState>() else {
-        // Only onboarding/startup may create the first hook.
-        return Ok(());
-    };
+    reinit_existing(app.try_state::<HandyKeysState>(), |state| {
+        reinit_shortcuts(app, &state)
+    })
+}
 
+fn reinit_existing<S>(
+    state: Option<S>,
+    reinit: impl FnOnce(S) -> Result<(), String>,
+) -> Result<(), String> {
+    // Only onboarding/startup may create the first hook.
+    match state {
+        Some(state) => reinit(state),
+        None => Ok(()),
+    }
+}
+
+fn reinit_shortcuts(app: &AppHandle, state: &HandyKeysState) -> Result<(), String> {
     state.reinstall_hook(app.clone())?;
 
     // Re-register all bindings on the freshly-spawned manager thread
@@ -601,12 +613,26 @@ pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
 
 /// Initialize handy-keys shortcuts
 pub fn init_shortcuts(app: &AppHandle) -> Result<(), String> {
+    init_if_missing(
+        || app.try_state::<HandyKeysState>().is_some(),
+        || init_new_shortcuts(app),
+    )
+}
+
+fn init_if_missing(
+    is_initialized: impl FnOnce() -> bool,
+    initialize: impl FnOnce() -> Result<(), String>,
+) -> Result<(), String> {
     let _init = INIT_LOCK
         .lock()
         .map_err(|_| "Shortcut initialization lock poisoned")?;
-    if app.try_state::<HandyKeysState>().is_some() {
+    if is_initialized() {
         return Ok(());
     }
+    initialize()
+}
+
+fn init_new_shortcuts(app: &AppHandle) -> Result<(), String> {
     let state = HandyKeysState::new(app.clone())?;
 
     let default_bindings = settings::get_default_settings().bindings;
@@ -716,6 +742,39 @@ pub fn stop_handy_keys_recording(app: AppHandle) -> Result<(), String> {
 mod tests {
     use super::*;
     use std::time::Duration;
+
+    #[test]
+    fn force_reinit_without_state_never_reaches_hook_or_settings() {
+        let result = reinit_existing(None::<()>, |_| {
+            Err("must not enter native reinitialization without state".into())
+        });
+        assert_eq!(result, Ok(()));
+        // The initialized path still calls through and preserves its error.
+        let result = reinit_existing(Some(7), |state| {
+            assert_eq!(state, 7);
+            Err("reinstall failed".into())
+        });
+        assert_eq!(result, Err("reinstall failed".into()));
+    }
+
+    #[test]
+    fn repeated_init_shortcuts_preserves_the_existing_manager() {
+        let initialized = AtomicBool::new(false);
+        let creations = AtomicU64::new(0);
+        for _ in 0..2 {
+            let result = init_if_missing(
+                || initialized.load(Ordering::Acquire),
+                || {
+                    creations.fetch_add(1, Ordering::Relaxed);
+                    initialized.store(true, Ordering::Release);
+                    Ok(())
+                },
+            );
+            assert_eq!(result, Ok(()));
+        }
+        assert_eq!(creations.load(Ordering::Relaxed), 1);
+        assert!(initialized.load(Ordering::Acquire));
+    }
 
     #[test]
     fn abandoned_cancel_worker_releases_reconciliation_lock_after_sender_replacement() {

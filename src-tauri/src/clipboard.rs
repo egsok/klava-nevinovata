@@ -18,8 +18,9 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 const PASTE_IDLE: u8 = 0;
 const PASTE_OUTPUT: u8 = 1;
 const PASTE_RESTORING: u8 = 2;
+const PASTE_WAIT_TIMEOUT: Duration = Duration::from_secs(30);
 pub(crate) const CLIPBOARD_BUSY: &str =
-    "Clipboard restoration is still busy. Try pasting again after it finishes, or restart the app.";
+    "Pasting did not finish in time or the clipboard is busy. Try again after it finishes, or restart the app.";
 
 static PASTE_ACTIVE: once_cell::sync::Lazy<Arc<AtomicU8>> =
     once_cell::sync::Lazy::new(|| Arc::new(AtomicU8::new(PASTE_IDLE)));
@@ -56,8 +57,22 @@ fn acquire_paste_lease(
     active: &Arc<AtomicU8>,
     timeout: Duration,
 ) -> Result<Arc<PasteLease>, String> {
+    acquire_paste_lease_with_timeout(active, timeout, PASTE_WAIT_TIMEOUT)
+}
+
+fn acquire_paste_lease_with_timeout(
+    active: &Arc<AtomicU8>,
+    restore_timeout: Duration,
+    wait_timeout: Duration,
+) -> Result<Arc<PasteLease>, String> {
+    let waiting_since = Instant::now();
     let mut restoring_since = None;
     loop {
+        // This deadline spans both phases and is never reset by a transition.
+        // A rejected waiter has not scheduled any clipboard or input work.
+        if waiting_since.elapsed() >= wait_timeout {
+            return Err(CLIPBOARD_BUSY.to_string());
+        }
         if active
             .compare_exchange(
                 PASTE_IDLE,
@@ -72,9 +87,9 @@ fn acquire_paste_lease(
             }));
         }
         // Direct typing, scripts and the reliable-paste receipt window may
-        // legitimately take seconds. Only a stalled restore rejects a paste.
+        // legitimately take seconds. Restoration has a separate shorter limit.
         if active.load(Ordering::Acquire) == PASTE_RESTORING {
-            if restoring_since.get_or_insert_with(Instant::now).elapsed() >= timeout {
+            if restoring_since.get_or_insert_with(Instant::now).elapsed() >= restore_timeout {
                 return Err(CLIPBOARD_BUSY.to_string());
             }
         } else {
@@ -1150,6 +1165,82 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
 mod tests {
     use super::*;
     use std::sync::atomic::AtomicBool;
+
+    #[test]
+    fn busy_output_wait_is_bounded_and_never_pastes_after_rejection() {
+        assert_eq!(PASTE_WAIT_TIMEOUT, Duration::from_secs(30));
+        let active = Arc::new(AtomicU8::new(PASTE_IDLE));
+        let holder = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+        let waiting = Arc::clone(&active);
+        let pasted = Arc::new(AtomicBool::new(false));
+        let worker_pasted = Arc::clone(&pasted);
+        let (result_tx, result_rx) = mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            let result = acquire_paste_lease_with_timeout(
+                &waiting,
+                Duration::from_secs(1),
+                Duration::from_millis(40),
+            )
+            .map(|_lease| worker_pasted.store(true, Ordering::Release));
+            result_tx.send(result).unwrap();
+        });
+        let result = result_rx.recv_timeout(Duration::from_secs(2));
+        // Release even on a regression, so the test can join the waiter.
+        drop(holder);
+        worker.join().unwrap();
+        assert_eq!(result.unwrap(), Err(CLIPBOARD_BUSY.to_string()));
+        assert!(!pasted.load(Ordering::Acquire));
+        assert_eq!(active.load(Ordering::Acquire), PASTE_IDLE);
+    }
+
+    #[test]
+    fn restore_wait_also_obeys_the_total_deadline() {
+        let active = Arc::new(AtomicU8::new(PASTE_IDLE));
+        let holder = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+        holder.begin_restore();
+        let waiting = Arc::clone(&active);
+        let (result_tx, result_rx) = mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            let result = acquire_paste_lease_with_timeout(
+                &waiting,
+                Duration::from_secs(10),
+                Duration::from_millis(40),
+            );
+            assert!(result_tx.send(result.map(|_| ())).is_ok());
+        });
+        let result = result_rx.recv_timeout(Duration::from_secs(2));
+        drop(holder);
+        worker.join().unwrap();
+        assert_eq!(result.unwrap(), Err(CLIPBOARD_BUSY.to_string()));
+    }
+
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    #[test]
+    fn restore_then_legacy_fallback_resumes_output_under_the_same_lease() {
+        let active = Arc::new(AtomicU8::new(PASTE_IDLE));
+        let holder = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+        holder.begin_restore();
+        assert_eq!(active.load(Ordering::Acquire), PASTE_RESTORING);
+        assert_eq!(
+            acquire_paste_lease(&active, Duration::ZERO)
+                .err()
+                .as_deref(),
+            Some(CLIPBOARD_BUSY)
+        );
+        holder.resume_output();
+        assert_eq!(active.load(Ordering::Acquire), PASTE_OUTPUT);
+        // Restoring's zero budget no longer rejects output, but the total
+        // deadline still does; resuming never releases the active lease.
+        assert_eq!(
+            acquire_paste_lease_with_timeout(&active, Duration::ZERO, Duration::from_millis(20))
+                .err()
+                .as_deref(),
+            Some(CLIPBOARD_BUSY)
+        );
+        assert_eq!(active.load(Ordering::Acquire), PASTE_OUTPUT);
+        drop(holder);
+        assert!(acquire_paste_lease(&active, Duration::ZERO).is_ok());
+    }
 
     #[test]
     fn clipboard_restore_finishes_even_after_injection_failure() {

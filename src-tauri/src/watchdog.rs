@@ -32,8 +32,7 @@ fn should_monitor_manager(handy_keys_selected: bool, state_exists: bool) -> bool
 
 fn manager_is_enabled(app: &AppHandle) -> bool {
     should_monitor_manager(
-        crate::settings::get_settings(app).keyboard_implementation
-            == crate::settings::KeyboardImplementation::HandyKeys,
+        crate::settings::handy_keys_selected(),
         app.try_state::<crate::shortcut::handy_keys::HandyKeysState>()
             .is_some(),
     )
