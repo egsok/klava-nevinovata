@@ -7,11 +7,49 @@ use enigo::{Direction, Enigo, Key, Keyboard};
 use log::{info, warn};
 use std::borrow::Cow;
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(target_os = "linux")]
 use std::sync::OnceLock;
+use std::sync::{mpsc, Arc};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
+
+static PASTE_ACTIVE: once_cell::sync::Lazy<Arc<AtomicBool>> =
+    once_cell::sync::Lazy::new(|| Arc::new(AtomicBool::new(false)));
+
+/// Shared ownership spans the paste caller and any asynchronous restoration.
+/// A timeout never releases a still-running OS write to race the next paste.
+pub(crate) struct PasteLease {
+    active: Arc<AtomicBool>,
+}
+
+impl Drop for PasteLease {
+    fn drop(&mut self) {
+        self.active.store(false, Ordering::Release);
+    }
+}
+
+fn acquire_paste_lease(
+    active: &Arc<AtomicBool>,
+    timeout: Duration,
+) -> Result<Arc<PasteLease>, String> {
+    let started = Instant::now();
+    loop {
+        if active
+            .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+            .is_ok()
+        {
+            return Ok(Arc::new(PasteLease {
+                active: Arc::clone(active),
+            }));
+        }
+        if started.elapsed() >= timeout {
+            return Err("Clipboard is busy with a previous paste or restore. Your transcription is saved in History; try again after it finishes.".to_string());
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+}
 
 #[cfg(target_os = "linux")]
 use crate::utils::{is_gnome_wayland, is_kde_wayland, is_wayland};
@@ -89,9 +127,7 @@ fn save_clipboard() -> SavedClipboard {
 const SAVE_CLIPBOARD_TIMEOUT: Duration = Duration::from_millis(1000);
 
 /// Runs `save_clipboard` on a worker thread with a timeout so a
-/// non-responding clipboard owner cannot freeze the caller (paste runs on
-/// the main thread — blocking it deafens the whole hotkey pipeline, because
-/// tray/overlay updates are proxied through the main thread).
+/// non-responding clipboard owner cannot hold up the paste worker forever.
 fn save_clipboard_with_timeout() -> SavedClipboard {
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
@@ -154,18 +190,32 @@ fn restore_clipboard(saved: SavedClipboard) {
     }
 }
 
-fn with_enigo<T>(
+/// Runs `f` with the shared Enigo on the main thread (macOS TIS APIs require it)
+/// and waits for the result. Runs inline if already on the main thread, so no deadlock.
+fn with_enigo<T: Send + 'static>(
     app_handle: &AppHandle,
-    f: impl FnOnce(&mut Enigo) -> Result<T, String>,
+    f: impl FnOnce(&mut Enigo) -> Result<T, String> + Send + 'static,
 ) -> Result<T, String> {
-    let enigo_state = app_handle
-        .try_state::<EnigoState>()
-        .ok_or("Enigo state not initialized")?;
-    let mut enigo = enigo_state
-        .0
-        .lock()
-        .map_err(|e| format!("Failed to lock Enigo: {}", e))?;
-    f(&mut enigo)
+    let (tx, rx) = mpsc::sync_channel(1);
+    let app = app_handle.clone();
+    app_handle
+        .run_on_main_thread(move || {
+            let result = (|| {
+                let enigo_state = app
+                    .try_state::<EnigoState>()
+                    .ok_or("Enigo state not initialized")?;
+                let mut enigo = enigo_state
+                    .0
+                    .lock()
+                    .map_err(|e| format!("Failed to lock Enigo: {}", e))?;
+                f(&mut enigo)
+            })();
+            let _ = tx.send(result);
+        })
+        .map_err(|e| format!("Failed to run input on the main thread: {}", e))?;
+    // A dropped closure (event loop shutting down) closes the channel.
+    rx.recv()
+        .map_err(|_| "Main thread dropped the input request".to_string())?
 }
 
 fn write_text_to_clipboard(app_handle: &AppHandle, text: &str) -> Result<(), String> {
@@ -184,12 +234,21 @@ fn write_text_to_clipboard(app_handle: &AppHandle, text: &str) -> Result<(), Str
 fn finish_clipboard_paste(
     paste_result: Result<(), String>,
     paste_delay_after_ms: u64,
+    transaction: Arc<PasteLease>,
     restore_clipboard: impl FnOnce() + Send + 'static,
 ) -> Result<(), String> {
+    let (finished_tx, finished_rx) = mpsc::channel();
     std::thread::spawn(move || {
+        // This lease outlives the caller's timeout. No subsequent paste can
+        // publish anything until the actual OS restore has returned.
+        let _transaction = transaction;
         std::thread::sleep(Duration::from_millis(paste_delay_after_ms));
         restore_clipboard();
+        let _ = finished_tx.send(());
     });
+    finished_rx
+        .recv_timeout(Duration::from_millis(paste_delay_after_ms).saturating_add(SAVE_CLIPBOARD_TIMEOUT))
+        .map_err(|_| "Clipboard restore has not finished. The transcription is saved in History; new pastes wait until restoration finishes.".to_string())?;
     paste_result
 }
 
@@ -201,6 +260,7 @@ fn paste_via_clipboard(
     paste_delay_ms: u64,
     paste_delay_after_ms: u64,
     restore: bool,
+    transaction: Arc<PasteLease>,
 ) -> Result<(), String> {
     // When the user wants the transcription to stay on the clipboard
     // (CopyToClipboard), restoring the old content right after would undo
@@ -227,7 +287,8 @@ fn paste_via_clipboard(
 
         // Fall back to enigo if no native tool handled it
         if !key_combo_sent {
-            with_enigo(app_handle, |enigo| match paste_method {
+            let paste_method = *paste_method;
+            with_enigo(app_handle, move |enigo| match paste_method {
                 // The legacy path cannot detect a mistimed chord, so it keeps the
                 // conservative 100ms modifier hold.
                 PasteMethod::CtrlV => input::send_paste_ctrl_v(enigo, 100),
@@ -247,7 +308,7 @@ fn paste_via_clipboard(
     // Preserve every supported clipboard format even when key injection fails.
     // Restoration stays off the main thread so a slow clipboard owner cannot
     // freeze the hotkey pipeline.
-    finish_clipboard_paste(paste_result, paste_delay_after_ms, move || {
+    finish_clipboard_paste(paste_result, paste_delay_after_ms, transaction, move || {
         let start = Instant::now();
         restore_clipboard(saved);
         if start.elapsed() > Duration::from_millis(500) {
@@ -613,6 +674,29 @@ fn type_text_via_xdotool(text: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Builds the dotool stdin script that types `text`.
+///
+/// dotool reads one command per line, so each line of `text` gets its own
+/// `type` command and line breaks are sent as `key enter`, like the other
+/// typing tools do. Otherwise everything after the first newline would be run
+/// as dotool commands instead of being typed.
+#[cfg(target_os = "linux")]
+fn dotool_type_script(text: &str) -> String {
+    let mut script = String::new();
+    for (i, line) in text.split('\n').enumerate() {
+        if i > 0 {
+            script.push_str("key enter\n");
+        }
+        let line = line.strip_suffix('\r').unwrap_or(line);
+        if !line.is_empty() {
+            script.push_str("type ");
+            script.push_str(line);
+            script.push('\n');
+        }
+    }
+    script
+}
+
 /// Type text directly via dotool (works on both Wayland and X11 via uinput).
 #[cfg(target_os = "linux")]
 fn type_text_via_dotool(text: &str) -> Result<(), String> {
@@ -625,8 +709,8 @@ fn type_text_via_dotool(text: &str) -> Result<(), String> {
         .map_err(|e| format!("Failed to spawn dotool: {}", e))?;
 
     if let Some(mut stdin) = child.stdin.take() {
-        // dotool uses "type <text>" command
-        writeln!(stdin, "type {}", text)
+        stdin
+            .write_all(dotool_type_script(text).as_bytes())
             .map_err(|e| format!("Failed to write to dotool stdin: {}", e))?;
     }
 
@@ -860,7 +944,10 @@ fn paste_direct(
         info!("Falling back to enigo for direct text input");
     }
 
-    with_enigo(app_handle, |enigo| input::paste_text_direct(enigo, text))
+    let text = text.to_string();
+    with_enigo(app_handle, move |enigo| {
+        input::paste_text_direct(enigo, &text)
+    })
 }
 
 pub(crate) fn send_return_key(enigo: &mut Enigo, key_type: AutoSubmitKey) -> Result<(), String> {
@@ -910,7 +997,10 @@ fn should_send_auto_submit(auto_submit: bool, paste_method: PasteMethod) -> bool
     auto_submit && paste_method != PasteMethod::None
 }
 
+/// Pastes `text` into the focused app. Call from a worker thread, never the main
+/// thread: it sleeps between steps (input injection hops via `with_enigo`).
 pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
+    let transaction = acquire_paste_lease(&PASTE_ACTIVE, Duration::from_secs(1))?;
     let settings = get_settings(&app_handle);
     let paste_method = settings.paste_method;
     let paste_delay_ms = settings.paste_delay_ms;
@@ -949,15 +1039,24 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
             // the legacy path untouched.
             #[cfg(any(target_os = "macos", target_os = "windows"))]
             if settings.reliable_paste {
-                let reliable_result = with_enigo(&app_handle, |enigo| {
+                // Runs entirely on the main thread, as it requires.
+                let (text, app) = (text.clone(), app_handle.clone());
+                let (auto_submit, auto_submit_key, clipboard_handling) = (
+                    settings.auto_submit,
+                    settings.auto_submit_key,
+                    settings.clipboard_handling,
+                );
+                let reliable_transaction = Arc::clone(&transaction);
+                let reliable_result = with_enigo(&app_handle, move |enigo| {
                     crate::paste_tx::try_reliable_paste(
                         &text,
-                        &app_handle,
+                        &app,
                         &paste_method,
                         enigo,
-                        settings.auto_submit,
-                        settings.auto_submit_key,
-                        settings.clipboard_handling,
+                        auto_submit,
+                        auto_submit_key,
+                        clipboard_handling,
+                        reliable_transaction,
                     )
                 });
                 match reliable_result {
@@ -975,6 +1074,7 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
                 paste_delay_ms,
                 paste_delay_after_ms,
                 restore,
+                Arc::clone(&transaction),
             )?
         }
         PasteMethod::ExternalScript => {
@@ -989,8 +1089,9 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
 
     if should_send_auto_submit(settings.auto_submit, paste_method) {
         std::thread::sleep(Duration::from_millis(50));
-        if let Err(error) = with_enigo(&app_handle, |enigo| {
-            send_return_key(enigo, settings.auto_submit_key)
+        let auto_submit_key = settings.auto_submit_key;
+        if let Err(error) = with_enigo(&app_handle, move |enigo| {
+            send_return_key(enigo, auto_submit_key)
         }) {
             log::warn!("Paste succeeded, but auto-submit failed: {error}");
         }
@@ -1007,6 +1108,60 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn clipboard_restore_finishes_even_after_injection_failure() {
+        for paste_result in [Ok(()), Err("input failed".to_string())] {
+            let expected = paste_result.clone();
+            let active = Arc::new(AtomicBool::new(false));
+            let transaction = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+            let restored = Arc::new(AtomicBool::new(false));
+            let restored_worker = Arc::clone(&restored);
+            assert_eq!(
+                finish_clipboard_paste(paste_result, 0, transaction, move || {
+                    restored_worker.store(true, Ordering::Release);
+                }),
+                expected
+            );
+            assert!(restored.load(Ordering::Acquire));
+        }
+    }
+
+    #[test]
+    fn timed_out_restore_keeps_next_paste_out_until_its_actual_write_finishes() {
+        let active = Arc::new(AtomicBool::new(false));
+        let transaction = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+        let clipboard = Arc::new(std::sync::Mutex::new("transcript A".to_string()));
+        let clipboard_a = Arc::clone(&clipboard);
+        let (release_tx, release_rx) = mpsc::channel();
+        let (done_tx, done_rx) = mpsc::channel();
+        let result = finish_clipboard_paste(Ok(()), 0, Arc::clone(&transaction), move || {
+            release_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+            *clipboard_a.lock().unwrap() = "original".into();
+            done_tx.send(()).unwrap();
+        });
+        assert!(result.is_err());
+        drop(transaction); // The original caller has already returned.
+        assert!(acquire_paste_lease(&active, Duration::ZERO).is_err());
+        assert_eq!(*clipboard.lock().unwrap(), "transcript A");
+        release_tx.send(()).unwrap();
+        done_rx.recv_timeout(Duration::from_secs(5)).unwrap();
+        let _b = acquire_paste_lease(&active, Duration::from_secs(1)).unwrap();
+        assert_eq!(*clipboard.lock().unwrap(), "original");
+        *clipboard.lock().unwrap() = "transcript B".into();
+        assert_eq!(*clipboard.lock().unwrap(), "transcript B");
+    }
+
+    #[test]
+    fn asynchronous_reliable_paste_keeps_the_same_lease_after_caller_returns() {
+        let active = Arc::new(AtomicBool::new(false));
+        let caller = acquire_paste_lease(&active, Duration::ZERO).unwrap();
+        let pending_restore = Arc::clone(&caller);
+        drop(caller);
+        assert!(acquire_paste_lease(&active, Duration::ZERO).is_err());
+        drop(pending_restore);
+        assert!(acquire_paste_lease(&active, Duration::ZERO).is_ok());
+    }
 
     #[cfg(target_os = "linux")]
     const YDOTOOL_0_1_8_HELP: &str = r#"
@@ -1085,6 +1240,24 @@ e.g. 28:1 28:0 means pressing on the Enter button on a standard US keyboard.
         );
     }
 
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn dotool_script_types_single_line_text_unchanged() {
+        assert_eq!(dotool_type_script("hello world"), "type hello world\n");
+        assert_eq!(dotool_type_script(" indented"), "type  indented\n");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn dotool_script_does_not_run_lines_of_text_as_commands() {
+        // dotool reads one command per line; text after a line break must still
+        // be typed, not executed as `key`/`click` commands.
+        assert_eq!(
+            dotool_type_script("first line\nkey super+l\r\nclick left\n"),
+            "type first line\nkey enter\ntype key super+l\nkey enter\ntype click left\nkey enter\n"
+        );
+    }
+
     #[test]
     fn auto_submit_requires_setting_enabled() {
         assert!(!should_send_auto_submit(false, PasteMethod::CtrlV));
@@ -1102,24 +1275,6 @@ e.g. 28:1 28:0 means pressing on the Enter button on a standard US keyboard.
         assert!(should_send_auto_submit(true, PasteMethod::Direct));
         assert!(should_send_auto_submit(true, PasteMethod::CtrlShiftV));
         assert!(should_send_auto_submit(true, PasteMethod::ShiftInsert));
-    }
-
-    #[test]
-    fn clipboard_restore_survives_injection_failure_without_blocking_the_caller() {
-        for paste_result in [Ok(()), Err("input failed".to_string())] {
-            let expected = paste_result.clone();
-            let (release_tx, release_rx) = std::sync::mpsc::channel();
-            let (restored_tx, restored_rx) = std::sync::mpsc::channel();
-            let result = finish_clipboard_paste(paste_result, 0, move || {
-                // A clipboard owner may block. The caller must remain free to
-                // process hotkeys while restoration waits on that owner.
-                release_rx.recv_timeout(Duration::from_secs(5)).unwrap();
-                restored_tx.send(()).unwrap();
-            });
-            assert_eq!(result, expected);
-            release_tx.send(()).unwrap();
-            restored_rx.recv_timeout(Duration::from_secs(5)).unwrap();
-        }
     }
 
     #[cfg(unix)]

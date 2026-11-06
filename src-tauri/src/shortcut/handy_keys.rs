@@ -121,10 +121,15 @@ impl HandyKeysState {
         let (cmd_tx, cmd_rx) = mpsc::channel::<ManagerCommand>();
 
         // Start the manager thread
-        let generation = MANAGER_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
         let app_clone = app.clone();
+        // Create the manager here rather than inside the thread so a startup
+        // failure (e.g. missing Accessibility permission) reaches the caller,
+        // which can then fall back to the Tauri implementation.
+        let manager = HotkeyManager::new_with_blocking()
+            .map_err(|e| format!("Failed to create HotkeyManager: {e}"))?;
+        let generation = MANAGER_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
         let thread_handle = thread::spawn(move || {
-            Self::manager_thread(cmd_rx, app_clone, generation);
+            Self::manager_thread(cmd_rx, app_clone, generation, manager);
         });
 
         Ok(Self {
@@ -138,31 +143,14 @@ impl HandyKeysState {
     }
 
     /// The main manager thread - owns the HotkeyManager and processes commands
-    fn manager_thread(cmd_rx: Receiver<ManagerCommand>, app: AppHandle, generation: u64) {
+    fn manager_thread(
+        cmd_rx: Receiver<ManagerCommand>,
+        app: AppHandle,
+        generation: u64,
+        manager: HotkeyManager,
+    ) {
         info!("handy-keys manager thread started (generation {generation})");
-
-        // Time HotkeyManager creation — this is when the OS-level
-        // WH_KEYBOARD_LL hook actually gets installed on Windows. Before this
-        // returns, hotkey events from the OS are lost. See debug plan: hotkey
-        // "не срабатывает сразу после рестарта" diagnosis.
         let hotkey_init_start = std::time::Instant::now();
-        let manager = match HotkeyManager::new_with_blocking() {
-            Ok(m) => {
-                info!(
-                    "handy-keys: HotkeyManager (WH_KEYBOARD_LL hook) ready in {}ms",
-                    hotkey_init_start.elapsed().as_millis()
-                );
-                m
-            }
-            Err(e) => {
-                error!("Failed to create HotkeyManager: {}", e);
-                return;
-            }
-        };
-
-        // One-shot flag: log the very first hook event with timing relative
-        // to manager init, to detect the gap between "hook ready" and "events
-        // actually flowing". Subsequent events use the per-event debug log.
         let mut first_event_logged = false;
 
         // Maps binding IDs to HotkeyIds and hotkey strings
@@ -338,8 +326,11 @@ impl HandyKeysState {
     pub fn reinstall_hook(&self, app: AppHandle) -> Result<(), String> {
         info!("HandyKeysState: reinstalling hook (abandoning old manager thread)");
 
-        // Bump the generation FIRST: from this moment the old thread refuses
-        // to dispatch events, even ones already drained into its local queue.
+        // Keep the current hook and its generation alive if replacement fails.
+        let manager = HotkeyManager::new_with_blocking()
+            .map_err(|e| format!("Failed to create replacement HotkeyManager: {e}"))?;
+
+        // Only a successfully created replacement invalidates old events.
         let generation = MANAGER_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
 
         // Ask the old thread to shut down, but do NOT join it — if it's stuck
@@ -354,14 +345,13 @@ impl HandyKeysState {
             let _ = handle_guard.take(); // drop the JoinHandle, detaching the thread
         }
 
-        // Spawn fresh manager thread (this re-installs the OS hook via
-        // `HotkeyManager::new_with_blocking()` on the new thread). The newest
+        // Move the already installed replacement into its manager thread. The newest
         // WH_KEYBOARD_LL hook runs first in the chain, so it wins blocking
         // decisions even while the old hook is still installed.
         let (new_tx, new_rx) = mpsc::channel::<ManagerCommand>();
         let app_clone = app.clone();
         let new_handle = thread::spawn(move || {
-            Self::manager_thread(new_rx, app_clone, generation);
+            Self::manager_thread(new_rx, app_clone, generation, manager);
         });
 
         // Replace command_sender + thread_handle in place

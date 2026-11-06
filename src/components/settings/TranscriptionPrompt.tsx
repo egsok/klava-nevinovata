@@ -5,6 +5,7 @@ import { useModelStore } from "../../stores/modelStore";
 import { SettingContainer } from "../ui/SettingContainer";
 import { Textarea } from "../ui/Textarea";
 import { Dropdown } from "../ui/Dropdown";
+import { isLegacyModel, toTableModel } from "../shared/modelTable/tableModel";
 import type { DropdownOption } from "../ui/Dropdown";
 
 interface TranscriptionPromptProps {
@@ -57,12 +58,15 @@ export const TranscriptionPrompt: React.FC<TranscriptionPromptProps> =
     const selectedLanguage = getSetting("selected_language");
     const currentModelId = useModelStore((s) => s.currentModel);
     const getModelInfo = useModelStore((s) => s.getModelInfo);
-    // Approximate gate: TranscribeCpp covers the whole GGUF family, of which
-    // only whisper-arch models take an initial prompt. The backend capability
-    // check (Feature::InitialPrompt) stays authoritative — a prompt set for a
-    // non-whisper GGUF model is simply ignored at inference time.
+    // Catalog family for GGUF, plus supported legacy Whisper .bin models.
+    // Custom metadata is only known by the backend; avoid a false unsupported
+    // warning for a custom Whisper GGUF. The backend stays authoritative.
+    const modelInfo = getModelInfo(currentModelId);
     const isWhisper =
-      getModelInfo(currentModelId)?.engine_type === "TranscribeCpp";
+      !!modelInfo &&
+      (toTableModel(modelInfo, t).model?.family === "whisper" ||
+        isLegacyModel(modelInfo) ||
+        modelInfo.is_custom);
     const [localValue, setLocalValue] = useState(currentPrompt);
     const [isDirty, setIsDirty] = useState(false);
 

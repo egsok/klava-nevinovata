@@ -20,7 +20,9 @@
 
 use serde::Serialize;
 use specta::Type;
-use tauri::{AppHandle, Emitter, Manager};
+#[cfg(target_os = "macos")]
+use tauri::Emitter;
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Clone, Serialize, Type)]
 pub struct SecureInputStatus {

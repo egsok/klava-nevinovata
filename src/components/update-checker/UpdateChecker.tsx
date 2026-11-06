@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { notify } from "@/stores/noticeStore";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { listen } from "@tauri-apps/api/event";
@@ -116,7 +116,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
       // Only a user-initiated check gets a toast; the automatic one on every
       // launch must stay quiet offline
       if (isManualCheckRef.current) {
-        toast.error(t("footer.updateCheckFailed"));
+        notify({ title: t("footer.updateCheckFailed"), level: "error" });
       }
     } finally {
       isCheckingRef.current = false;
@@ -175,7 +175,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
       await relaunch();
     } catch (error) {
       console.error("Failed to install update:", error);
-      toast.error(t("footer.updateInstallFailed"));
+      notify({ title: t("footer.updateInstallFailed"), level: "error" });
     } finally {
       isInstallingRef.current = false;
       setIsInstalling(false);
@@ -227,18 +227,18 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
     <>
       {showPortableUpdateDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background border border-mid-gray/20 rounded-lg p-6 max-w-md w-full mx-4 space-y-4">
+          <div className="bg-background border border-line rounded-lg p-6 max-w-md w-full mx-4 space-y-4">
             <h2 className="text-base font-semibold">
               {t("footer.portableUpdateTitle")}
             </h2>
-            <p className="text-sm text-text/70">
+            <p className="text-sm text-ink-2">
               {hasDirectInstaller
                 ? t("footer.portableUpdateMessage")
                 : t("footer.portableUpdateBrowseMessage")}
             </p>
             <div className="flex gap-2 justify-end">
               <button
-                className="px-3 py-1.5 text-sm rounded border border-mid-gray/20 hover:bg-mid-gray/10 transition-colors"
+                className="px-3 py-1.5 text-sm rounded border border-line hover:bg-wash transition-colors"
                 onClick={() => setShowPortableUpdateDialog(false)}
               >
                 {t("common.close")}
@@ -265,14 +265,14 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
             disabled={isUpdateDisabled}
             className={`transition-colors disabled:opacity-50 tabular-nums min-w-0 truncate ${
               updateAvailable
-                ? "text-logo-primary hover:text-logo-primary/80 font-medium"
-                : "text-text/60 hover:text-text/80"
+                ? "text-logo-primary hover:text-logo-primary font-medium"
+                : "text-ink-2 hover:text-text"
             }`}
           >
             {getUpdateStatusText()}
           </button>
         ) : (
-          <span className="text-text/60 tabular-nums min-w-0 truncate">
+          <span className="text-ink-2 tabular-nums min-w-0 truncate">
             {getUpdateStatusText()}
           </span>
         )}

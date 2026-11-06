@@ -23,8 +23,9 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
     self, get_settings, AutoSubmitKey, ChineseScript, ClipboardHandling, KeyboardImplementation,
-    LLMPrompt, OverlayPosition, OverlayStyle, PasteMethod, ShortcutActivation, ShortcutBinding,
-    SoundTheme, Theme, TypingTool, VadBackend, APPLE_INTELLIGENCE_PROVIDER_ID,
+    LLMPrompt, LanguageDetectionMode, OverlayPosition, OverlayStyle, PasteMethod,
+    ShortcutActivation, ShortcutBinding, SoundTheme, Theme, TypingTool, VadBackend,
+    APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
 
@@ -52,6 +53,9 @@ pub fn init_shortcuts(app: &AppHandle) {
 
                 tauri_impl::init_shortcuts(app);
             }
+        }
+        KeyboardImplementation::None => {
+            info!("Built-in keyboard shortcuts disabled; use CLI flags or signals");
         }
     }
 }
@@ -88,6 +92,7 @@ struct CancelRegistration {
 #[cfg(not(target_os = "linux"))]
 fn cancel_backend_generation(implementation: KeyboardImplementation) -> u64 {
     match implementation {
+        KeyboardImplementation::None => 0,
         KeyboardImplementation::Tauri => TAURI_GENERATION.load(Ordering::SeqCst),
         KeyboardImplementation::HandyKeys => HANDY_KEYS_GENERATION.load(Ordering::SeqCst),
     }
@@ -173,7 +178,9 @@ fn reconcile_cancel_shortcut(app: &AppHandle) {
     {
         let mut registered = CANCEL_REGISTERED.lock().unwrap_or_else(|e| e.into_inner());
         let settings = get_settings(app);
-        let desired = if CANCEL_REQUESTED.load(Ordering::SeqCst) {
+        let desired = if CANCEL_REQUESTED.load(Ordering::SeqCst)
+            && settings.keyboard_implementation != KeyboardImplementation::None
+        {
             settings
                 .bindings
                 .get("cancel")
@@ -193,6 +200,7 @@ fn reconcile_cancel_shortcut(app: &AppHandle) {
             |registration, register| {
                 let binding = registration.binding.clone();
                 match (registration.implementation, register) {
+                    (KeyboardImplementation::None, _) => Ok(()),
                     (KeyboardImplementation::Tauri, true) => {
                         tauri_impl::register_shortcut(app, binding)
                     }
@@ -220,6 +228,7 @@ pub fn register_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<()
     match settings.keyboard_implementation {
         KeyboardImplementation::Tauri => tauri_impl::register_shortcut(app, binding),
         KeyboardImplementation::HandyKeys => handy_keys::register_shortcut(app, binding),
+        KeyboardImplementation::None => Ok(()),
     }
 }
 
@@ -229,6 +238,7 @@ pub fn unregister_shortcut(app: &AppHandle, binding: ShortcutBinding) -> Result<
     match settings.keyboard_implementation {
         KeyboardImplementation::Tauri => tauri_impl::unregister_shortcut(app, binding),
         KeyboardImplementation::HandyKeys => handy_keys::unregister_shortcut(app, binding),
+        KeyboardImplementation::None => Ok(()),
     }
 }
 
@@ -253,6 +263,7 @@ pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
             Ok(())
         }
         KeyboardImplementation::HandyKeys => handy_keys::force_reinit(app),
+        KeyboardImplementation::None => Ok(()),
     }
 }
 
@@ -543,6 +554,7 @@ pub fn get_keyboard_implementation(app: AppHandle) -> String {
     match settings.keyboard_implementation {
         KeyboardImplementation::Tauri => "tauri".to_string(),
         KeyboardImplementation::HandyKeys => "handy_keys".to_string(),
+        KeyboardImplementation::None => "none".to_string(),
     }
 }
 
@@ -558,6 +570,7 @@ fn validate_shortcut_for_implementation(
     match implementation {
         KeyboardImplementation::Tauri => tauri_impl::validate_shortcut(raw),
         KeyboardImplementation::HandyKeys => handy_keys::validate_shortcut(raw),
+        KeyboardImplementation::None => Ok(()),
     }
 }
 
@@ -566,6 +579,7 @@ fn parse_keyboard_implementation(s: &str) -> KeyboardImplementation {
     match s {
         "tauri" => KeyboardImplementation::Tauri,
         "handy_keys" => KeyboardImplementation::HandyKeys,
+        "none" => KeyboardImplementation::None,
         other => {
             warn!(
                 "Invalid keyboard implementation '{}', defaulting to tauri",
@@ -589,6 +603,7 @@ fn unregister_all_shortcuts(app: &AppHandle, implementation: KeyboardImplementat
         let result = match implementation {
             KeyboardImplementation::Tauri => tauri_impl::unregister_shortcut(app, binding),
             KeyboardImplementation::HandyKeys => handy_keys::unregister_shortcut(app, binding),
+            KeyboardImplementation::None => Ok(()),
         };
 
         if let Err(e) = result {
@@ -647,6 +662,7 @@ fn register_all_shortcuts_for_implementation(
         let result = match implementation {
             KeyboardImplementation::Tauri => tauri_impl::register_shortcut(app, binding),
             KeyboardImplementation::HandyKeys => handy_keys::register_shortcut(app, binding),
+            KeyboardImplementation::None => Ok(()),
         };
 
         if let Err(e) = result {
@@ -808,7 +824,28 @@ pub fn change_translate_to_english_setting(app: AppHandle, enabled: bool) -> Res
 #[tauri::command]
 #[specta::specta]
 pub fn change_selected_language_setting(app: AppHandle, language: String) -> Result<(), String> {
-    settings::update_settings(&app, |s| s.selected_language = language);
+    settings::update_settings(&app, |s| s.selected_language = language.clone());
+    tray::update_tray_menu(&app);
+
+    // The tray can change it too; keep the settings window in sync.
+    let _ = app.emit(
+        "settings-changed",
+        serde_json::json!({
+            "setting": "selected_language",
+            "value": language
+        }),
+    );
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_spoken_languages_setting(
+    app: AppHandle,
+    languages: Vec<String>,
+) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.spoken_languages = languages);
+    tray::update_tray_menu(&app);
     Ok(())
 }
 
@@ -1004,6 +1041,27 @@ pub fn change_word_correction_threshold_setting(
 
 #[tauri::command]
 #[specta::specta]
+pub fn change_language_detection_setting(
+    app: AppHandle,
+    mode: LanguageDetectionMode,
+) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.language_detection = mode);
+    tray::update_tray_menu(&app);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_language_detection_window_setting(app: AppHandle, secs: u32) -> Result<(), String> {
+    let (min, max) = settings::LANGUAGE_DETECTION_WINDOW_SECS.into_inner();
+    settings::update_settings(&app, |s| {
+        s.language_detection_window_secs = secs.clamp(min, max)
+    });
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn change_extra_recording_buffer_setting(app: AppHandle, ms: u64) -> Result<(), String> {
     settings::update_settings(&app, |s| s.extra_recording_buffer_ms = ms);
     Ok(())
@@ -1185,6 +1243,30 @@ pub fn change_post_process_base_url_setting(
         }
 
         provider.base_url = base_url;
+        Ok(())
+    })
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn change_post_process_api_format_setting(
+    app: AppHandle,
+    provider_id: String,
+    api_format: settings::PostProcessApiFormat,
+) -> Result<(), String> {
+    settings::try_update_settings_with(&app, |settings| {
+        let provider = settings
+            .post_process_provider_mut(&provider_id)
+            .ok_or_else(|| format!("Provider '{}' not found", provider_id))?;
+
+        if provider.id != "custom" {
+            return Err(format!(
+                "Provider '{}' does not allow changing the API format",
+                provider.label
+            ));
+        }
+
+        provider.api_format = api_format;
         Ok(())
     })
 }
@@ -1404,6 +1486,13 @@ pub fn change_vad_enabled_setting(app: AppHandle, enabled: bool) -> Result<(), S
 
 #[tauri::command]
 #[specta::specta]
+pub fn change_long_form_chunking_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
+    settings::update_settings(&app, |s| s.long_form_chunking = enabled);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn change_vad_backend_setting(app: AppHandle, backend: VadBackend) -> Result<(), String> {
     if settings::get_settings(&app).vad_backend == backend {
         return Ok(());
@@ -1481,17 +1570,8 @@ pub fn change_transcribe_accelerator_setting(
 ) -> Result<(), String> {
     settings::update_settings(&app, |s| s.transcribe_accelerator = accelerator);
     reload_accelerator_on_next_use(&app);
-    Ok(())
-}
-
-#[tauri::command]
-#[specta::specta]
-pub fn change_ort_accelerator_setting(
-    app: AppHandle,
-    accelerator: settings::OrtAcceleratorSetting,
-) -> Result<(), String> {
-    settings::update_settings(&app, |s| s.ort_accelerator = accelerator);
-    reload_accelerator_on_next_use(&app);
+    app.state::<std::sync::Arc<crate::managers::transcription::TranscriptionManager>>()
+        .retry_transcribe_gpu("the transcribe.cpp accelerator setting changed");
     Ok(())
 }
 
@@ -1500,6 +1580,8 @@ pub fn change_ort_accelerator_setting(
 pub fn change_transcribe_gpu_device(app: AppHandle, device: Option<String>) -> Result<(), String> {
     settings::update_settings(&app, |s| s.transcribe_gpu_device = device);
     reload_accelerator_on_next_use(&app);
+    app.state::<std::sync::Arc<crate::managers::transcription::TranscriptionManager>>()
+        .retry_transcribe_gpu("the transcribe.cpp GPU device setting changed");
     Ok(())
 }
 
@@ -1511,10 +1593,16 @@ pub fn change_transcribe_gpu_device(app: AppHandle, device: Option<String>) -> R
 /// stays responsive — see also the startup pre-warm in `lib.rs`.
 #[tauri::command]
 #[specta::specta]
-pub async fn get_available_accelerators() -> crate::managers::transcription::AvailableAccelerators {
-    tauri::async_runtime::spawn_blocking(crate::managers::transcription::get_available_accelerators)
-        .await
-        .expect("get_available_accelerators panicked")
+pub async fn get_available_accelerators(
+    app: AppHandle,
+) -> crate::managers::transcription::AvailableAccelerators {
+    tauri::async_runtime::spawn_blocking(move || {
+        let tm =
+            app.state::<std::sync::Arc<crate::managers::transcription::TranscriptionManager>>();
+        crate::managers::transcription::get_available_accelerators(&tm)
+    })
+    .await
+    .expect("get_available_accelerators panicked")
 }
 
 #[cfg(test)]

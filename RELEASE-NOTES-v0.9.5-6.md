@@ -12,7 +12,7 @@
 
 **Футер перестал слипаться.** Статус проверки обновлений («Checking for updates…», прогресс загрузки) упирался вплотную в ссылку на канал, а при скачивании апдейта наезжал на неё. Теперь между блоками фиксированный зазор: длинный статус обрезается многоточием, ссылка на канал и номер версии всегда на месте.
 
-Замечание: фикс установщика приезжает вместе с новым инсталлером, поэтому при обновлении *на эту версию* диалог ошибки ещё может мелькнуть один последний раз — Retry решает. Все следующие обновления пройдут уже тихо.
+Замечание: фикс установщика приезжает вместе с новым инсталлером, поэтому при обновлении _на эту версию_ диалог ошибки ещё может мелькнуть один последний раз — Retry решает. Все следующие обновления пройдут уже тихо.
 
 ---
 
@@ -24,4 +24,4 @@ A small fix release based on first impressions of the v0.9.5-5 auto-update.
 
 **The footer no longer crowds itself:** the update status ("Checking for updates…", download progress) ran flush into the channel link and overlapped it during downloads. There is now a fixed gap — a long status truncates with an ellipsis while the channel link and version number stay put.
 
-Note: the installer fix ships inside the new installer, so while updating *to* this version the error dialog may still flash one last time — Retry resolves it. Every update after this one is covered.
+Note: the installer fix ships inside the new installer, so while updating _to_ this version the error dialog may still flash one last time — Retry resolves it. Every update after this one is covered.

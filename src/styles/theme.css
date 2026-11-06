@@ -115,3 +115,44 @@
   --color-warning: var(--dark-color-warning);
   --color-error: var(--dark-color-error);
 }
+
+/* Upstream 0.10 semantic roles mapped onto the fork's two inks. */
+:root {
+  --color-ink-2: color-mix(in srgb, var(--color-text) 60%, transparent);
+  --color-ink-3: var(--color-mid-gray);
+  --color-line-strong: color-mix(
+    in srgb,
+    var(--color-mid-gray) 80%,
+    transparent
+  );
+  --color-line: color-mix(in srgb, var(--color-mid-gray) 20%, transparent);
+  --color-wash: color-mix(in srgb, var(--color-mid-gray) 10%, transparent);
+  --color-moss: var(--color-state-soft);
+  --color-moss-wash: color-mix(
+    in srgb,
+    var(--color-state-soft) 12%,
+    var(--color-background)
+  );
+  --color-plum: var(--color-text);
+  --color-plum-pick: color-mix(in srgb, var(--color-plum) 60%, transparent);
+  --color-plum-faint: color-mix(in srgb, var(--color-plum) 22%, transparent);
+  --color-warning-wash: color-mix(
+    in srgb,
+    var(--color-warning) 12%,
+    var(--color-background)
+  );
+  --color-error-wash: color-mix(
+    in srgb,
+    var(--color-error) 12%,
+    var(--color-background)
+  );
+  --color-mascot-line: var(--color-text);
+  --color-wordmark: var(--color-logo-primary);
+  --color-wordmark-stroke: var(--color-text);
+  --color-demo-window: #f2ecdc;
+  --color-demo-lid: #1e1640;
+  --color-demo-alu-hi: #452ba6;
+  --color-demo-alu-lo: #2c1a72;
+  --demo-wallpaper: var(--color-background);
+  --demo-pill-shadow: 2px 2px 0 var(--color-state-soft);
+}

@@ -12,8 +12,8 @@
 //!    start/stop actions; mic open (WASAPI) and tray/overlay updates happen
 //!    here; if it stalls, presses queue up in the coordinator channel.
 //! 3. **main thread** (Tauri event loop) — tray `set_icon`, window getters
-//!    and `paste()` are proxied through it and BLOCK the caller; a hung
-//!    clipboard owner app can freeze it via `GetClipboardData`.
+//!    and input injection. Ordinary clipboard snapshots/restores now run on
+//!    paste workers; input injection still waits for the main thread.
 //!
 //! Each thread reports a heartbeat; a watchdog thread checks them every few
 //! seconds, logs an ERROR naming the exact stalled component (this is the

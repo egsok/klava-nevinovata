@@ -191,6 +191,8 @@ pub(crate) fn send_chord(
 /// and chord injection have completed and the guarded restore (plus
 /// auto-submit) finishes asynchronously.
 #[cfg(any(target_os = "macos", target_os = "windows"))]
+// Keep the lease explicit alongside the existing platform paste inputs.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn try_reliable_paste(
     text: &str,
     app_handle: &tauri::AppHandle,
@@ -199,6 +201,7 @@ pub(crate) fn try_reliable_paste(
     auto_submit: bool,
     auto_submit_key: crate::settings::AutoSubmitKey,
     clipboard_handling: crate::settings::ClipboardHandling,
+    transaction: std::sync::Arc<crate::clipboard::PasteLease>,
 ) -> Result<(), String> {
     platform::run(
         text,
@@ -208,6 +211,7 @@ pub(crate) fn try_reliable_paste(
         auto_submit,
         auto_submit_key,
         clipboard_handling,
+        transaction,
     )
 }
 

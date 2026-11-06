@@ -16,7 +16,7 @@
    (prefill 15 / offline hangover 15 / streaming hangover 55 / onset 2 кадра
    по 30 мс, константы в `audio_toolkit/vad/mod.rs`).
 2. **RMS-гейт тишины** (`managers/transcription.rs`, `RMS_SILENCE_THRESHOLD =
-   0.005`): почти беззвучный буфер не доходит до движка.
+0.005`): почти беззвучный буфер не доходит до движка.
 3. **Текстовая чистка для whisper-моделей** (`audio_toolkit/text.rs`):
    `remove_repeated_sentences` + `remove_hallucinated_sentences` вызываются для
    whisper-family. В списке — «Продолжение следует», субтитровые кредиты,
@@ -28,9 +28,9 @@
 
 ## Сравнение настроек с рекомендациями
 
-| Параметр | У нас | Silero-дефолт | faster-whisper (Silero→Whisper) |
-| --- | --- | --- | --- |
-| threshold | **0.3** | 0.5 | 0.5 |
+| Параметр         | У нас           | Silero-дефолт                  | faster-whisper (Silero→Whisper)  |
+| ---------------- | --------------- | ------------------------------ | -------------------------------- |
+| threshold        | **0.3**         | 0.5                            | 0.5                              |
 | хвост после речи | hangover 450 мс | pad 30 мс + min_silence 100 мс | pad 400 мс + min_silence 2000 мс |
 
 Выводы:

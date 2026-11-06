@@ -19,17 +19,19 @@ import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const OUT = "D:/dev/Handy-v09/rebrand";
-for (const d of ["", "svg", "tray", "wordmark"]) mkdirSync(join(OUT, d), { recursive: true });
+for (const d of ["", "svg", "tray", "wordmark"])
+  mkdirSync(join(OUT, d), { recursive: true });
 
 // ---- palette: the two inks + paper ----
-const VIOLET = "#2c1a72";    // second ink — capsule, cradle, halo outline
-const MAGENTA = "#e11b76";   // first ink — halo, recording, action
-const PLATE = "#f2ecdc";     // paper-2, the printed sheet
-const CREAM = "#f2ecdc";     // type/strokes over solid ink (same sheet tone)
+const VIOLET = "#2c1a72"; // second ink — capsule, cradle, halo outline
+const MAGENTA = "#e11b76"; // first ink — halo, recording, action
+const PLATE = "#f2ecdc"; // paper-2, the printed sheet
+const CREAM = "#f2ecdc"; // type/strokes over solid ink (same sheet tone)
 const MONO_WHITE = "#FFFFFF"; // tray icons on dark taskbar (no *_dark suffix)
-const MONO_INK = "#1E1913";   // tray icons on light taskbar (*_dark suffix)
+const MONO_INK = "#1E1913"; // tray icons on light taskbar (*_dark suffix)
 
-const svgOpen = (vb) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">`;
+const svgOpen = (vb) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">`;
 
 // ---- app logo 1024: big mic + halo on warm plate ----
 // Halo is two concentric strokes (ink under amber) — SVG strokes can't have
@@ -51,13 +53,15 @@ const HALO = (c) =>
 const ARC = (c, sw = 5.5) =>
   `<path d="M 12.5 37.5 a 19.5 19.5 0 0 0 39 0" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>
    <line x1="32" y1="57" x2="32" y2="59.5" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>`;
-const CAPSULE = (attrs) => `<rect x="21.5" y="18" width="21" height="30" rx="10.5" ${attrs}/>`;
+const CAPSULE = (attrs) =>
+  `<rect x="21.5" y="18" width="21" height="30" rx="10.5" ${attrs}/>`;
 const DOTS = (c) =>
   `<circle cx="19" cy="33" r="4.8" fill="${c}"/><circle cx="32" cy="33" r="4.8" fill="${c}"/><circle cx="45" cy="33" r="4.8" fill="${c}"/>`;
 
 function trayMono(c, state) {
   let body = "";
-  if (state === "idle") body = CAPSULE(`fill="none" stroke="${c}" stroke-width="5.5"`) + ARC(c);
+  if (state === "idle")
+    body = CAPSULE(`fill="none" stroke="${c}" stroke-width="5.5"`) + ARC(c);
   if (state === "recording") body = CAPSULE(`fill="${c}"`) + ARC(c);
   if (state === "transcribing") body = DOTS(c) + ARC(c);
   return `${svgOpen("0 0 64 64")}${HALO(c)}${body}</svg>`;
@@ -91,19 +95,44 @@ function wordmark(fg1, fg2, caret) {
 // bright magenta + cream-mut on the wall.
 const jobs = [
   ["svg/logo.svg", "logo.png", 1024, logo],
-  ["svg/wordmark-for-light-bg.svg", "wordmark/wordmark-for-light-bg.png", 1880, wordmark("#b81261", "#3a2a7a", "#b81261")],
-  ["svg/wordmark-for-dark-bg.svg", "wordmark/wordmark-for-dark-bg.png", 1880, wordmark("#ff2f88", "#a99e83", "#ff2f88")],
+  [
+    "svg/wordmark-for-light-bg.svg",
+    "wordmark/wordmark-for-light-bg.png",
+    1880,
+    wordmark("#b81261", "#3a2a7a", "#b81261"),
+  ],
+  [
+    "svg/wordmark-for-dark-bg.svg",
+    "wordmark/wordmark-for-dark-bg.png",
+    1880,
+    wordmark("#ff2f88", "#a99e83", "#ff2f88"),
+  ],
 ];
 for (const [state, file] of [
   ["idle", "tray_idle"],
   ["recording", "tray_recording"],
   ["transcribing", "tray_transcribing"],
 ]) {
-  jobs.push([`svg/${file}.svg`, `tray/${file}.png`, 64, trayMono(MONO_WHITE, state)]);
-  jobs.push([`svg/${file}_dark.svg`, `tray/${file}_dark.png`, 64, trayMono(MONO_INK, state)]);
+  jobs.push([
+    `svg/${file}.svg`,
+    `tray/${file}.png`,
+    64,
+    trayMono(MONO_WHITE, state),
+  ]);
+  jobs.push([
+    `svg/${file}_dark.svg`,
+    `tray/${file}_dark.png`,
+    64,
+    trayMono(MONO_INK, state),
+  ]);
 }
 for (const state of ["idle", "recording", "transcribing"]) {
-  jobs.push([`svg/colored_${state}.svg`, `tray/colored_${state}.png`, 64, trayColored(state)]);
+  jobs.push([
+    `svg/colored_${state}.svg`,
+    `tray/colored_${state}.png`,
+    64,
+    trayColored(state),
+  ]);
 }
 
 for (const [svgPath, pngPath, width, svg] of jobs) {

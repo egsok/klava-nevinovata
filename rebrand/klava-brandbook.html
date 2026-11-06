@@ -1,401 +1,1469 @@
 <!doctype html>
 <html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>klava-nevinovata — бренд-бук</title>
-<style>
-  :root {
-    --bg: #EDE7DA;
-    --card: #F8F4EA;
-    --ink: #2A2419;
-    --muted: #6E6350;
-    --line: #D9CFBB;
-    --accent: #C4791B;
-    --rec: #C74A33;
-    --tray-dark-bg: #1B1812;
-    --tray-light-bg: #F2EDE1;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #211C14; --card: #2B251A; --ink: #EDE4CF; --muted: #A2947A;
-      --line: #3E3625; --accent: #E3A33C; --rec: #E0654A;
-      --tray-dark-bg: #14110B; --tray-light-bg: #EDE7DA;
-    }
-  }
-  :root[data-theme="light"] {
-    --bg: #EDE7DA; --card: #F8F4EA; --ink: #2A2419; --muted: #6E6350;
-    --line: #D9CFBB; --accent: #C4791B; --rec: #C74A33;
-    --tray-dark-bg: #1B1812; --tray-light-bg: #F2EDE1;
-  }
-  :root[data-theme="dark"] {
-    --bg: #211C14; --card: #2B251A; --ink: #EDE4CF; --muted: #A2947A;
-    --line: #3E3625; --accent: #E3A33C; --rec: #E0654A;
-    --tray-dark-bg: #14110B; --tray-light-bg: #EDE7DA;
-  }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>klava-nevinovata — бренд-бук</title>
+    <style>
+      :root {
+        --bg: #ede7da;
+        --card: #f8f4ea;
+        --ink: #2a2419;
+        --muted: #6e6350;
+        --line: #d9cfbb;
+        --accent: #c4791b;
+        --rec: #c74a33;
+        --tray-dark-bg: #1b1812;
+        --tray-light-bg: #f2ede1;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #211c14;
+          --card: #2b251a;
+          --ink: #ede4cf;
+          --muted: #a2947a;
+          --line: #3e3625;
+          --accent: #e3a33c;
+          --rec: #e0654a;
+          --tray-dark-bg: #14110b;
+          --tray-light-bg: #ede7da;
+        }
+      }
+      :root[data-theme="light"] {
+        --bg: #ede7da;
+        --card: #f8f4ea;
+        --ink: #2a2419;
+        --muted: #6e6350;
+        --line: #d9cfbb;
+        --accent: #c4791b;
+        --rec: #c74a33;
+        --tray-dark-bg: #1b1812;
+        --tray-light-bg: #f2ede1;
+      }
+      :root[data-theme="dark"] {
+        --bg: #211c14;
+        --card: #2b251a;
+        --ink: #ede4cf;
+        --muted: #a2947a;
+        --line: #3e3625;
+        --accent: #e3a33c;
+        --rec: #e0654a;
+        --tray-dark-bg: #14110b;
+        --tray-light-bg: #ede7da;
+      }
 
-  * { box-sizing: border-box; }
-  body {
-    background: var(--bg); color: var(--ink);
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    line-height: 1.55; margin: 0; padding: 48px 20px 80px;
-  }
-  .wrap { max-width: 980px; margin: 0 auto; }
-  .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        line-height: 1.55;
+        margin: 0;
+        padding: 48px 20px 80px;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .mono {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      }
 
-  .eyebrow {
-    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); margin: 0 0 10px;
-  }
-  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0 0 10px; text-wrap: balance; font-weight: 700; }
-  .lede { color: var(--muted); max-width: 64ch; margin: 0 0 8px; }
-  h2 { font-size: 21px; margin: 56px 0 6px; }
-  h2 .idx {
-    font-family: ui-monospace, Consolas, monospace; font-size: 13px;
-    color: var(--accent); margin-right: 10px; letter-spacing: 0.08em;
-  }
-  .sub { color: var(--muted); font-size: 14.5px; max-width: 68ch; margin: 0 0 22px; }
+      .eyebrow {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-size: clamp(30px, 5vw, 44px);
+        line-height: 1.1;
+        margin: 0 0 10px;
+        text-wrap: balance;
+        font-weight: 700;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 64ch;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 56px 0 6px;
+      }
+      h2 .idx {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 13px;
+        color: var(--accent);
+        margin-right: 10px;
+        letter-spacing: 0.08em;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 14.5px;
+        max-width: 68ch;
+        margin: 0 0 22px;
+      }
 
-  /* hero */
-  .hero {
-    display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center;
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 28px;
-  }
-  @media (max-width: 620px) { .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
-  .hero p { margin: 6px 0 0; font-size: 14.5px; color: var(--muted); }
-  .hero .sense { margin: 0; font-size: 15.5px; }
-  .hero .sense b { color: var(--accent); }
+      /* hero */
+      .hero {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 28px;
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 28px;
+      }
+      @media (max-width: 620px) {
+        .hero {
+          grid-template-columns: 1fr;
+          justify-items: center;
+          text-align: center;
+        }
+      }
+      .hero p {
+        margin: 6px 0 0;
+        font-size: 14.5px;
+        color: var(--muted);
+      }
+      .hero .sense {
+        margin: 0;
+        font-size: 15.5px;
+      }
+      .hero .sense b {
+        color: var(--accent);
+      }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
-  .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    padding: 22px; display: flex; flex-direction: column; gap: 12px;
-  }
-  .card h3 { margin: 0; font-size: 16px; }
-  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .card p {
+        margin: 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
 
-  /* tray strips */
-  .tray-table { display: flex; flex-direction: column; gap: 10px; }
-  .tray-row { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: center; }
-  .tray-row .label { font-size: 13px; color: var(--muted); }
-  .tray-row .strip {
-    border-radius: 8px; padding: 12px 16px; display: flex; gap: 28px; align-items: center;
-    border: 1px solid var(--line);
-  }
-  .strip.on-dark { background: var(--tray-dark-bg); }
-  .strip.on-light { background: var(--tray-light-bg); }
-  .tray-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .tray-cell span { font-size: 11px; font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.06em; }
-  .on-dark .tray-cell span { color: #8F8672; }
-  .on-light .tray-cell span { color: #6E6350; }
+      /* tray strips */
+      .tray-table {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .tray-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+      .tray-row .label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .tray-row .strip {
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        gap: 28px;
+        align-items: center;
+        border: 1px solid var(--line);
+      }
+      .strip.on-dark {
+        background: var(--tray-dark-bg);
+      }
+      .strip.on-light {
+        background: var(--tray-light-bg);
+      }
+      .tray-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+      .tray-cell span {
+        font-size: 11px;
+        font-family: ui-monospace, Consolas, monospace;
+        letter-spacing: 0.06em;
+      }
+      .on-dark .tray-cell span {
+        color: #8f8672;
+      }
+      .on-light .tray-cell span {
+        color: #6e6350;
+      }
 
-  /* wordmark demos */
-  .wm-block {
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-    padding: 26px 24px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;
-  }
-  .wm-block .note { font-size: 13px; color: var(--muted); }
-  .wm1 { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: clamp(20px, 4vw, 32px); font-weight: 600; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
-  .wm1 .dim { font-weight: 400; color: var(--muted); }
-  .caret {
-    display: inline-block; width: 0.55ch; height: 1.05em; background: var(--accent);
-    vertical-align: text-bottom; margin-left: 2px;
-    animation: blink 1.1s steps(1) infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
-  .wm2 { font-family: ui-monospace, Consolas, monospace; font-size: clamp(18px, 3.4vw, 26px); overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
-  .key-hyphen {
-    display: inline-block; border: 1.5px solid var(--accent); border-bottom-width: 4px; border-radius: 6px;
-    padding: 0 0.35ch; margin: 0 0.25ch; color: var(--accent); font-weight: 700;
-  }
-  .wm-cyr { font-size: 15px; color: var(--muted); }
+      /* wordmark demos */
+      .wm-block {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 26px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .wm-block .note {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .wm1 {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: clamp(20px, 4vw, 32px);
+        font-weight: 600;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 4px;
+      }
+      .wm1 .dim {
+        font-weight: 400;
+        color: var(--muted);
+      }
+      .caret {
+        display: inline-block;
+        width: 0.55ch;
+        height: 1.05em;
+        background: var(--accent);
+        vertical-align: text-bottom;
+        margin-left: 2px;
+        animation: blink 1.1s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .caret {
+          animation: none;
+        }
+      }
+      .wm2 {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: clamp(18px, 3.4vw, 26px);
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 4px;
+      }
+      .key-hyphen {
+        display: inline-block;
+        border: 1.5px solid var(--accent);
+        border-bottom-width: 4px;
+        border-radius: 6px;
+        padding: 0 0.35ch;
+        margin: 0 0.25ch;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .wm-cyr {
+        font-size: 15px;
+        color: var(--muted);
+      }
 
-  /* palette */
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-  .chip {
-    border: 1px solid var(--line); border-radius: 10px; background: var(--card);
-    padding: 12px; display: flex; gap: 10px; align-items: center;
-  }
-  .chip .sw { flex: none; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); }
-  .chip b { font-size: 13px; display: block; }
-  .chip code { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: var(--muted); }
+      /* palette */
+      .chips {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .chip .sw {
+        flex: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+      .chip b {
+        font-size: 13px;
+        display: block;
+      }
+      .chip code {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
 
-  table.plan { border-collapse: collapse; width: 100%; font-size: 14px; }
-  table.plan td, table.plan th { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  table.plan th { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-  table.plan td:first-child { font-family: ui-monospace, Consolas, monospace; font-size: 13px; white-space: nowrap; }
-  .table-scroll { overflow-x: auto; }
-  .caveat { font-size: 13px; color: var(--muted); max-width: 68ch; margin: 14px 0 0; padding-left: 14px; border-left: 3px solid var(--accent); }
+      table.plan {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+      }
+      table.plan td,
+      table.plan th {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      table.plan th {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      table.plan td:first-child {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+      .caveat {
+        font-size: 13px;
+        color: var(--muted);
+        max-width: 68ch;
+        margin: 14px 0 0;
+        padding-left: 14px;
+        border-left: 3px solid var(--accent);
+      }
 
-  /* UI mockups */
-  .ui-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
-  .ui-mock {
-    border-radius: 10px; overflow: hidden; border: 1px solid var(--line);
-    font-size: 11px; background: var(--m-bg); color: var(--m-text);
-  }
-  .mock-dark {
-    --m-bg: #262019; --m-side: #1D1811; --m-row: #2F2820; --m-text: #EDE4CF;
-    --m-muted: #A2947A; --m-acc: #E3A33C; --m-acc-ink: #262019; --m-chip: #3A3226;
-  }
-  .mock-light {
-    --m-bg: #F9F5EB; --m-side: #EFE8D7; --m-row: #FFFDF6; --m-text: #2A2419;
-    --m-muted: #6E6350; --m-acc: #B9751C; --m-acc-ink: #FFF9EC; --m-chip: #EDE5D2;
-  }
-  .ui-mock .tb {
-    display: flex; align-items: center; gap: 7px; padding: 7px 12px;
-    background: var(--m-side); font-size: 10.5px; color: var(--m-muted);
-  }
-  .ui-mock .tb svg { flex: none; }
-  .ui-mock .body { display: grid; grid-template-columns: 108px 1fr; }
-  .ui-mock .side { background: var(--m-side); padding: 10px 8px 12px; display: flex; flex-direction: column; gap: 4px; }
-  .ui-mock .wm {
-    font-family: ui-monospace, Consolas, monospace; font-weight: 700;
-    font-size: 11px; color: var(--m-acc); padding: 2px 6px 10px; white-space: nowrap;
-  }
-  .ui-mock .wm .cr { display: inline-block; width: 3px; height: 10px; background: var(--m-acc); vertical-align: -1px; }
-  .ui-mock .nav { padding: 5px 9px; border-radius: 6px; color: var(--m-muted); }
-  .ui-mock .nav.active { background: var(--m-acc); color: var(--m-acc-ink); font-weight: 600; }
-  .ui-mock .content { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 7px; }
-  .ui-mock .sec { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--m-muted); margin-top: 3px; }
-  .ui-mock .row {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--m-row); border-radius: 7px; padding: 7px 10px; gap: 8px;
-  }
-  .ui-mock .chip2 { background: var(--m-chip); border-radius: 6px; padding: 2px 8px; font-size: 10px; }
-  .ui-mock .tgl { width: 28px; height: 15px; border-radius: 99px; position: relative; flex: none; }
-  .ui-mock .tgl::after { content: ""; position: absolute; width: 11px; height: 11px; border-radius: 50%; top: 2px; background: #FFFDF6; }
-  .ui-mock .tgl.on { background: var(--m-acc); } .ui-mock .tgl.on::after { right: 2px; }
-  .ui-mock .tgl.off { background: var(--m-chip); } .ui-mock .tgl.off::after { left: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
-  .ui-mock .foot {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 12px; background: var(--m-side); color: var(--m-muted); font-size: 10px;
-  }
-  .ui-mock .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #4CAF6D; margin-right: 5px; }
-  .mock-label { text-align: center; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+      /* UI mockups */
+      .ui-pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
+      }
+      .ui-mock {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        font-size: 11px;
+        background: var(--m-bg);
+        color: var(--m-text);
+      }
+      .mock-dark {
+        --m-bg: #262019;
+        --m-side: #1d1811;
+        --m-row: #2f2820;
+        --m-text: #ede4cf;
+        --m-muted: #a2947a;
+        --m-acc: #e3a33c;
+        --m-acc-ink: #262019;
+        --m-chip: #3a3226;
+      }
+      .mock-light {
+        --m-bg: #f9f5eb;
+        --m-side: #efe8d7;
+        --m-row: #fffdf6;
+        --m-text: #2a2419;
+        --m-muted: #6e6350;
+        --m-acc: #b9751c;
+        --m-acc-ink: #fff9ec;
+        --m-chip: #ede5d2;
+      }
+      .ui-mock .tb {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 12px;
+        background: var(--m-side);
+        font-size: 10.5px;
+        color: var(--m-muted);
+      }
+      .ui-mock .tb svg {
+        flex: none;
+      }
+      .ui-mock .body {
+        display: grid;
+        grid-template-columns: 108px 1fr;
+      }
+      .ui-mock .side {
+        background: var(--m-side);
+        padding: 10px 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ui-mock .wm {
+        font-family: ui-monospace, Consolas, monospace;
+        font-weight: 700;
+        font-size: 11px;
+        color: var(--m-acc);
+        padding: 2px 6px 10px;
+        white-space: nowrap;
+      }
+      .ui-mock .wm .cr {
+        display: inline-block;
+        width: 3px;
+        height: 10px;
+        background: var(--m-acc);
+        vertical-align: -1px;
+      }
+      .ui-mock .nav {
+        padding: 5px 9px;
+        border-radius: 6px;
+        color: var(--m-muted);
+      }
+      .ui-mock .nav.active {
+        background: var(--m-acc);
+        color: var(--m-acc-ink);
+        font-weight: 600;
+      }
+      .ui-mock .content {
+        padding: 12px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .ui-mock .sec {
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--m-muted);
+        margin-top: 3px;
+      }
+      .ui-mock .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--m-row);
+        border-radius: 7px;
+        padding: 7px 10px;
+        gap: 8px;
+      }
+      .ui-mock .chip2 {
+        background: var(--m-chip);
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 10px;
+      }
+      .ui-mock .tgl {
+        width: 28px;
+        height: 15px;
+        border-radius: 99px;
+        position: relative;
+        flex: none;
+      }
+      .ui-mock .tgl::after {
+        content: "";
+        position: absolute;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        top: 2px;
+        background: #fffdf6;
+      }
+      .ui-mock .tgl.on {
+        background: var(--m-acc);
+      }
+      .ui-mock .tgl.on::after {
+        right: 2px;
+      }
+      .ui-mock .tgl.off {
+        background: var(--m-chip);
+      }
+      .ui-mock .tgl.off::after {
+        left: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+      }
+      .ui-mock .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 12px;
+        background: var(--m-side);
+        color: var(--m-muted);
+        font-size: 10px;
+      }
+      .ui-mock .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4caf6d;
+        margin-right: 5px;
+      }
+      .mock-label {
+        text-align: center;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
 
-  /* history strip */
-  .hist { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-  .hist .card { align-items: center; text-align: center; gap: 8px; }
-  .hist .why { font-size: 12.5px; color: var(--muted); }
+      /* history strip */
+      .hist {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+      }
+      .hist .card {
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+      }
+      .hist .why {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
 
-  /* facts */
-  ul.facts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: 14.5px; max-width: 74ch; }
-  ul.facts li { padding-left: 22px; position: relative; }
-  ul.facts li::before { content: ""; position: absolute; left: 4px; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-  ul.facts code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
-</style>
+      /* facts */
+      ul.facts {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        font-size: 14.5px;
+        max-width: 74ch;
+      }
+      ul.facts li {
+        padding-left: 22px;
+        position: relative;
+      }
+      ul.facts li::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 9px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      ul.facts code {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="eyebrow">
+        klava-nevinovata · бренд-бук · итоговая версия · отгружено 2026-07-10
+      </p>
+      <h1>Клава невиновата</h1>
+      <p class="lede">
+        Визуальная айдентика форка: знак, трей-система, вордмарк, палитра и темы
+        интерфейса — в том виде, в котором всё реально уехало в релизы
+        <span class="mono">v0.9.0-3</span> (latest) и
+        <span class="mono">v0.8.3-4</span> на github.com/egsok/klava-nevinovata.
+      </p>
 
-</head>
-<body>
-<div class="wrap">
-  <p class="eyebrow">klava-nevinovata · бренд-бук · итоговая версия · отгружено 2026-07-10</p>
-  <h1>Клава невиновата</h1>
-  <p class="lede">Визуальная айдентика форка: знак, трей-система, вордмарк, палитра и темы интерфейса — в том виде, в котором всё реально уехало в релизы <span class="mono">v0.9.0-3</span> (latest) и <span class="mono">v0.8.3-4</span> на github.com/egsok/klava-nevinovata.</p>
-
-  <h2><span class="idx">01</span>Знак: микрофон с нимбом</h2>
-  <div class="hero">
-    <svg width="200" height="200" viewBox="0 0 1024 1024" role="img" aria-label="Логотип: микрофон с нимбом">
-      <rect x="32" y="32" width="960" height="960" rx="212" fill="#F5EFDF"/>
-      <ellipse cx="530" cy="150" rx="240" ry="75" fill="none" stroke="#E3A33C" stroke-width="52" transform="rotate(-9 530 150)"/>
-      <rect x="362" y="292" width="300" height="356" rx="150" fill="#C4791B" stroke="#2A2419" stroke-width="28"/>
-      <path d="M 282 590 a 230 230 0 0 0 460 0" fill="none" stroke="#2A2419" stroke-width="44" stroke-linecap="round"/>
-      <line x1="512" y1="820" x2="512" y2="890" stroke="#2A2419" stroke-width="44" stroke-linecap="round"/>
-    </svg>
-    <div>
-      <p class="sense"><b>Микрофон</b> — голос. <b>Нимб</b> — невиновата. <b>«Клаву»</b> несёт вордмарк.</p>
-      <p>Два элемента вместо трёх — осознанный итог: знак обязан выживать в 16–24 px (титлбар, «Пуск», трей), и на живой 2K-сборке это условие прошла только связка «крупная капсула + нимб». Тёплая бежевая плашка и чернильный контур — из мира ретро-клавиатур, а не AI-стартапов.</p>
-    </div>
-  </div>
-
-  <h2><span class="idx">02</span>Трей: одна геометрия, три состояния, три темы</h2>
-  <p class="sub">Состояния различаются капсулой: idle — контурная, запись — залитая, обработка — три точки. Дуга-стойка и нимб неизменны, поэтому иконка узнаваема в любом состоянии. 9 файлов (3 состояния × моно-светлая / моно-тёмная / цветная) экспортируются из одного генератора.</p>
-
-  <div class="tray-table">
-    <div class="tray-row">
-      <div class="label">Моно · тёмная панель</div>
-      <div class="strip on-dark">
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#EDE7DA" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="none" stroke="#EDE7DA" stroke-width="2.5"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>idle</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#EDE7DA" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#EDE7DA"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>rec</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#EDE7DA" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><circle cx="10" cy="14.5" r="2.25" fill="#EDE7DA"/><circle cx="16" cy="14.5" r="2.25" fill="#EDE7DA"/><circle cx="22" cy="14.5" r="2.25" fill="#EDE7DA"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#EDE7DA" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>busy</span>
+      <h2><span class="idx">01</span>Знак: микрофон с нимбом</h2>
+      <div class="hero">
+        <svg
+          width="200"
+          height="200"
+          viewBox="0 0 1024 1024"
+          role="img"
+          aria-label="Логотип: микрофон с нимбом"
+        >
+          <rect
+            x="32"
+            y="32"
+            width="960"
+            height="960"
+            rx="212"
+            fill="#F5EFDF"
+          />
+          <ellipse
+            cx="530"
+            cy="150"
+            rx="240"
+            ry="75"
+            fill="none"
+            stroke="#E3A33C"
+            stroke-width="52"
+            transform="rotate(-9 530 150)"
+          />
+          <rect
+            x="362"
+            y="292"
+            width="300"
+            height="356"
+            rx="150"
+            fill="#C4791B"
+            stroke="#2A2419"
+            stroke-width="28"
+          />
+          <path
+            d="M 282 590 a 230 230 0 0 0 460 0"
+            fill="none"
+            stroke="#2A2419"
+            stroke-width="44"
+            stroke-linecap="round"
+          />
+          <line
+            x1="512"
+            y1="820"
+            x2="512"
+            y2="890"
+            stroke="#2A2419"
+            stroke-width="44"
+            stroke-linecap="round"
+          />
+        </svg>
+        <div>
+          <p class="sense">
+            <b>Микрофон</b> — голос. <b>Нимб</b> — невиновата.
+            <b>«Клаву»</b> несёт вордмарк.
+          </p>
+          <p>
+            Два элемента вместо трёх — осознанный итог: знак обязан выживать в
+            16–24 px (титлбар, «Пуск», трей), и на живой 2K-сборке это условие
+            прошла только связка «крупная капсула + нимб». Тёплая бежевая плашка
+            и чернильный контур — из мира ретро-клавиатур, а не AI-стартапов.
+          </p>
         </div>
       </div>
-    </div>
-    <div class="tray-row">
-      <div class="label">Моно · светлая панель</div>
-      <div class="strip on-light">
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#1E1913" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="none" stroke="#1E1913" stroke-width="2.5"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>idle</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#1E1913" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#1E1913"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>rec</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#1E1913" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><circle cx="10" cy="14.5" r="2.25" fill="#1E1913"/><circle cx="16" cy="14.5" r="2.25" fill="#1E1913"/><circle cx="22" cy="14.5" r="2.25" fill="#1E1913"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#1E1913" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>busy</span>
-        </div>
-      </div>
-    </div>
-    <div class="tray-row">
-      <div class="label">Цветная (только v0.9)</div>
-      <div class="strip on-dark">
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#E3A33C" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#C4791B"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>idle</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#E3A33C" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#C74A33"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>rec</span>
-        </div>
-        <div class="tray-cell">
-          <svg width="30" height="30" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#E3A33C" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><circle cx="10" cy="14.5" r="2.25" fill="#C4791B"/><circle cx="16" cy="14.5" r="2.25" fill="#C4791B"/><circle cx="22" cy="14.5" r="2.25" fill="#C4791B"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#FFFDF4" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <span>busy</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <p class="caveat">Дуга и стойка в цветной теме — тёпло-белые (#FFFDF4), в расчёте на тёмные панели задач. На светлой панели у цветной темы дуга бледнеет — осознанный компромисс, тот же, что у upstream-иконок.</p>
 
-  <h2><span class="idx">03</span>Вордмарк</h2>
-  <p class="sub">Моноширинный, строчными — как имя репозитория. «klava» жирным, хвост приглушён, янтарная каретка — «она сейчас печатает». В приложении (сайдбар) ширина глифов запинена через <span class="mono">textLength</span>, чтобы каретка вставала на место при любых системных шрифтах (macOS/Linux).</p>
+      <h2>
+        <span class="idx">02</span>Трей: одна геометрия, три состояния, три темы
+      </h2>
+      <p class="sub">
+        Состояния различаются капсулой: idle — контурная, запись — залитая,
+        обработка — три точки. Дуга-стойка и нимб неизменны, поэтому иконка
+        узнаваема в любом состоянии. 9 файлов (3 состояния × моно-светлая /
+        моно-тёмная / цветная) экспортируются из одного генератора.
+      </p>
 
-  <div class="wm-block">
-    <div class="wm1">klava<span class="dim">-nevinovata</span><span class="caret"></span></div>
-    <div class="note">Основной вордмарк — сайдбар приложения, README, сайт.</div>
-  </div>
-  <div class="wm-block">
-    <div class="wm2">klava<span class="key-hyphen">-</span>nevinovata</div>
-    <div class="note">Вариант для обложек и соцкартинок: дефис-кейкап — последний привет клавише из ранних итераций знака. Статичный.</div>
-    <div class="wm-cyr" style="margin-top:6px;">Кириллический тэглайн для канала: <b>«Клава невиновата ¯\_(ツ)_/¯»</b> — тэглайн, не лого.</div>
-  </div>
-
-  <h2><span class="idx">04</span>Палитра и токены темы</h2>
-  <p class="sub">Вся тема приложения — 5 CSS-токенов (v0.9: <span class="mono">src/styles/theme.css</span>; 0.8.3: <span class="mono">src/App.css</span>). Токены <span class="mono">logo-stroke</span> / <span class="mono">text-stroke</span> удалены вместе с пузырьковым леттерингом.</p>
-
-  <div class="table-scroll">
-  <table class="plan">
-    <tr><th>Токен</th><th>Светлая</th><th>Тёмная</th><th>Роль</th></tr>
-    <tr><td>--color-background</td><td>#F9F5EB</td><td>#262019</td><td>тёплая бумага / тёплый графит</td></tr>
-    <tr><td>--color-text</td><td>#2A2419</td><td>#EDE4CF</td><td>основной текст</td></tr>
-    <tr><td>--color-background-ui</td><td>#B9751C</td><td>#C4791B</td><td>акцент: активный пункт, тогглы, кнопки</td></tr>
-    <tr><td>--color-logo-primary</td><td>#C4791B</td><td>#E3A33C</td><td>вордмарк, каретка, акценты оверлея</td></tr>
-    <tr><td>--color-mid-gray</td><td colspan="2">#8A7F6B</td><td>приглушённый текст, рамки</td></tr>
-  </table>
-  </div>
-
-  <p class="sub" style="margin-top:22px;">Палитра ассетов (лого, трей, иллюстрации):</p>
-  <div class="chips">
-    <div class="chip"><span class="sw" style="background:#E3A33C"></span><div><b>Янтарь</b><code>#E3A33C</code></div></div>
-    <div class="chip"><span class="sw" style="background:#C4791B"></span><div><b>Янтарь тёмный</b><code>#C4791B</code></div></div>
-    <div class="chip"><span class="sw" style="background:#2A2419"></span><div><b>Чернила</b><code>#2A2419</code></div></div>
-    <div class="chip"><span class="sw" style="background:#F5EFDF"></span><div><b>Плашка</b><code>#F5EFDF</code></div></div>
-    <div class="chip"><span class="sw" style="background:#FFFDF4"></span><div><b>Тёплый белый</b><code>#FFFDF4</code></div></div>
-    <div class="chip"><span class="sw" style="background:#C74A33"></span><div><b>Запись</b><code>#C74A33</code></div></div>
-  </div>
-
-  <h2><span class="idx">05</span>Интерфейс: обе темы</h2>
-  <p class="sub">Приложение следует теме ОС. Зелёная точка статуса модели и красный записи — семантические цвета, они вне брендовой палитры.</p>
-
-  <div class="ui-pair">
-    <div>
-      <div class="ui-mock mock-dark">
-        <div class="tb">
-          <svg width="13" height="13" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#E3A33C" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#C4791B"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#EDE4CF" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#EDE4CF" stroke-width="2.5" stroke-linecap="round"/></svg>
-          klava-nevinovata
-        </div>
-        <div class="body">
-          <div class="side">
-            <div class="wm">klava-nevinovata<span class="cr"></span></div>
-            <div class="nav active">General</div>
-            <div class="nav">Models</div>
-            <div class="nav">Advanced</div>
-            <div class="nav">History</div>
-            <div class="nav">About</div>
+      <div class="tray-table">
+        <div class="tray-row">
+          <div class="label">Моно · тёмная панель</div>
+          <div class="strip on-dark">
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>idle</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#EDE7DA"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>rec</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <circle cx="10" cy="14.5" r="2.25" fill="#EDE7DA" />
+                <circle cx="16" cy="14.5" r="2.25" fill="#EDE7DA" />
+                <circle cx="22" cy="14.5" r="2.25" fill="#EDE7DA" />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#EDE7DA"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>busy</span>
+            </div>
           </div>
-          <div class="content">
-            <div class="sec">General</div>
-            <div class="row"><span>Transcribe Shortcut</span><span class="chip2">Ctrl + Space</span></div>
-            <div class="row"><span>Push To Talk</span><span class="tgl off"></span></div>
-            <div class="sec">Sound</div>
-            <div class="row"><span>Audio Feedback</span><span class="tgl on"></span></div>
-            <div class="row"><span>Microphone</span><span class="chip2">Default</span></div>
+        </div>
+        <div class="tray-row">
+          <div class="label">Моно · светлая панель</div>
+          <div class="strip on-light">
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>idle</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#1E1913"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>rec</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <circle cx="10" cy="14.5" r="2.25" fill="#1E1913" />
+                <circle cx="16" cy="14.5" r="2.25" fill="#1E1913" />
+                <circle cx="22" cy="14.5" r="2.25" fill="#1E1913" />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#1E1913"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>busy</span>
+            </div>
           </div>
         </div>
-        <div class="foot"><span><span class="dot"></span>Breeze ASR</span><span>v0.9.0-3</span></div>
+        <div class="tray-row">
+          <div class="label">Цветная (только v0.9)</div>
+          <div class="strip on-dark">
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#E3A33C"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#C4791B"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>idle</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#E3A33C"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#C74A33"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>rec</span>
+            </div>
+            <div class="tray-cell">
+              <svg width="30" height="30" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#E3A33C"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <circle cx="10" cy="14.5" r="2.25" fill="#C4791B" />
+                <circle cx="16" cy="14.5" r="2.25" fill="#C4791B" />
+                <circle cx="22" cy="14.5" r="2.25" fill="#C4791B" />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#FFFDF4"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>busy</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="mock-label">Тёмная тема</div>
-    </div>
+      <p class="caveat">
+        Дуга и стойка в цветной теме — тёпло-белые (#FFFDF4), в расчёте на
+        тёмные панели задач. На светлой панели у цветной темы дуга бледнеет —
+        осознанный компромисс, тот же, что у upstream-иконок.
+      </p>
 
-    <div>
-      <div class="ui-mock mock-light">
-        <div class="tb">
-          <svg width="13" height="13" viewBox="0 0 32 32"><ellipse cx="16.5" cy="3.5" rx="8.5" ry="2.5" fill="none" stroke="#B9751C" stroke-width="2.3" transform="rotate(-9 16.5 3.5)"/><rect x="10.5" y="7.5" width="11" height="14" rx="5.5" fill="#C4791B"/><path d="M 7 19 a 9 9 0 0 0 18 0" fill="none" stroke="#2A2419" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="28" x2="16" y2="30.5" stroke="#2A2419" stroke-width="2.5" stroke-linecap="round"/></svg>
-          klava-nevinovata
+      <h2><span class="idx">03</span>Вордмарк</h2>
+      <p class="sub">
+        Моноширинный, строчными — как имя репозитория. «klava» жирным, хвост
+        приглушён, янтарная каретка — «она сейчас печатает». В приложении
+        (сайдбар) ширина глифов запинена через
+        <span class="mono">textLength</span>, чтобы каретка вставала на место
+        при любых системных шрифтах (macOS/Linux).
+      </p>
+
+      <div class="wm-block">
+        <div class="wm1">
+          klava<span class="dim">-nevinovata</span><span class="caret"></span>
         </div>
-        <div class="body">
-          <div class="side">
-            <div class="wm">klava-nevinovata<span class="cr"></span></div>
-            <div class="nav active">General</div>
-            <div class="nav">Models</div>
-            <div class="nav">Advanced</div>
-            <div class="nav">History</div>
-            <div class="nav">About</div>
-          </div>
-          <div class="content">
-            <div class="sec">General</div>
-            <div class="row"><span>Transcribe Shortcut</span><span class="chip2">Ctrl + Space</span></div>
-            <div class="row"><span>Push To Talk</span><span class="tgl off"></span></div>
-            <div class="sec">Sound</div>
-            <div class="row"><span>Audio Feedback</span><span class="tgl on"></span></div>
-            <div class="row"><span>Microphone</span><span class="chip2">Default</span></div>
-          </div>
+        <div class="note">
+          Основной вордмарк — сайдбар приложения, README, сайт.
         </div>
-        <div class="foot"><span><span class="dot"></span>Breeze ASR</span><span>v0.9.0-3</span></div>
       </div>
-      <div class="mock-label">Светлая тема</div>
-    </div>
-  </div>
+      <div class="wm-block">
+        <div class="wm2">klava<span class="key-hyphen">-</span>nevinovata</div>
+        <div class="note">
+          Вариант для обложек и соцкартинок: дефис-кейкап — последний привет
+          клавише из ранних итераций знака. Статичный.
+        </div>
+        <div class="wm-cyr" style="margin-top: 6px">
+          Кириллический тэглайн для канала:
+          <b>«Клава невиновата ¯\_(ツ)_/¯»</b> — тэглайн, не лого.
+        </div>
+      </div>
 
-  <h2><span class="idx">06</span>Как знак пришёл к финалу</h2>
-  <p class="sub">Три итерации за два дня — каждую убил или спас реальный размер, а не вкус на большом холсте.</p>
-  <div class="hist">
-    <div class="card">
-      <svg width="90" height="90" viewBox="0 0 120 120"><ellipse cx="62" cy="17" rx="24" ry="7.5" fill="none" stroke="var(--accent)" stroke-width="5.5" transform="rotate(-9 62 17)"/><rect x="24" y="44" width="72" height="58" rx="13" fill="none" stroke="var(--muted)" stroke-width="3.5"/><text x="60" y="86" text-anchor="middle" font-family="ui-monospace, Consolas, monospace" font-weight="700" font-size="34" fill="var(--muted)">К</text></svg>
-      <h3>1 · Клавиша «К»</h3>
-      <p class="why">Каламбур целиком, но К дублировала клавишу и не говорила «голос».</p>
-    </div>
-    <div class="card">
-      <svg width="90" height="90" viewBox="0 0 120 120"><ellipse cx="62" cy="15" rx="24" ry="7.5" fill="none" stroke="var(--accent)" stroke-width="5.5" transform="rotate(-9 62 15)"/><rect x="24" y="34" width="72" height="56" rx="13" fill="none" stroke="var(--muted)" stroke-width="3.5"/><rect x="52" y="46" width="16" height="24" rx="8" fill="var(--muted)"/><path d="M 46 62 a 14 14 0 0 0 28 0" fill="none" stroke="var(--muted)" stroke-width="3.5" stroke-linecap="round"/><line x1="60" y1="76" x2="60" y2="82" stroke="var(--muted)" stroke-width="3.5" stroke-linecap="round"/></svg>
-      <h3>2 · Клавиша + микрофон</h3>
-      <p class="why">Все три смысла в одном знаке — но три вложенных элемента умерли на 16–24 px: на живой 2K-сборке считывался только нимб.</p>
-    </div>
-    <div class="card">
-      <svg width="90" height="90" viewBox="0 0 120 120"><ellipse cx="62" cy="14" rx="27" ry="8.5" fill="none" stroke="var(--accent)" stroke-width="6" transform="rotate(-9 62 14)"/><rect x="40" y="30" width="40" height="50" rx="20" fill="var(--accent)"/><path d="M 28 70 a 32 32 0 0 0 64 0" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/><line x1="60" y1="102" x2="60" y2="111" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/></svg>
-      <h3>3 · Микрофон + нимб — финал</h3>
-      <p class="why">Два жирных элемента. Выжил во всех размерах; «Клава» переехала в вордмарк.</p>
-    </div>
-  </div>
+      <h2><span class="idx">04</span>Палитра и токены темы</h2>
+      <p class="sub">
+        Вся тема приложения — 5 CSS-токенов (v0.9:
+        <span class="mono">src/styles/theme.css</span>; 0.8.3:
+        <span class="mono">src/App.css</span>). Токены
+        <span class="mono">logo-stroke</span> /
+        <span class="mono">text-stroke</span> удалены вместе с пузырьковым
+        леттерингом.
+      </p>
 
-  <h2><span class="idx">07</span>Что отгружено и где лежит</h2>
-  <ul class="facts">
-    <li>Релизы: <code>v0.9.0-3</code> (latest) и <code>v0.8.3-4</code> (фолбэк-линия), CI на 5 платформ. Репо переименовано: <code>egsok/klava-nevinovata</code> (редирект со старых имён работает).</li>
-    <li><code>productName: klava-nevinovata</code>; exe остался <code>handy.exe</code> (завязан на cargo-крейт); с v0.9.5-2 (и v0.8.3-6 в stable-линии) identifier — <code>ru.egorsokolov.klava-nevinovata</code>, данные переносятся автоматически (старая папка <code>com.pais.handy</code> остаётся бэкапом).</li>
-    <li>Инсталлятор мигрирует со старого «Handy»: снос легаси-установки, чистка автостарта и реестра — проверено живой установкой поверх 0.9.0-2.</li>
-    <li>Рука Handy в сайдбаре заменена на lucide <code>SlidersHorizontal</code>; донат-блоки upstream'а убраны; все ссылки ведут на свой репо.</li>
-    <li>Исходники дизайна: <code>D:/dev/Handy/rebrand/</code> — SVG-мастера всего + <code>generate.mjs</code> (resvg-js), полный набор PNG пересобирается одной командой.</li>
-    <li>Открыто: маскот «тётя Клава» (машинистка с пучком, очками и нимбом) — для README, стикеров и экрана ошибок; генерация по отдельному промпту.</li>
-  </ul>
-</div>
-</body>
+      <div class="table-scroll">
+        <table class="plan">
+          <tr>
+            <th>Токен</th>
+            <th>Светлая</th>
+            <th>Тёмная</th>
+            <th>Роль</th>
+          </tr>
+          <tr>
+            <td>--color-background</td>
+            <td>#F9F5EB</td>
+            <td>#262019</td>
+            <td>тёплая бумага / тёплый графит</td>
+          </tr>
+          <tr>
+            <td>--color-text</td>
+            <td>#2A2419</td>
+            <td>#EDE4CF</td>
+            <td>основной текст</td>
+          </tr>
+          <tr>
+            <td>--color-background-ui</td>
+            <td>#B9751C</td>
+            <td>#C4791B</td>
+            <td>акцент: активный пункт, тогглы, кнопки</td>
+          </tr>
+          <tr>
+            <td>--color-logo-primary</td>
+            <td>#C4791B</td>
+            <td>#E3A33C</td>
+            <td>вордмарк, каретка, акценты оверлея</td>
+          </tr>
+          <tr>
+            <td>--color-mid-gray</td>
+            <td colspan="2">#8A7F6B</td>
+            <td>приглушённый текст, рамки</td>
+          </tr>
+        </table>
+      </div>
+
+      <p class="sub" style="margin-top: 22px">
+        Палитра ассетов (лого, трей, иллюстрации):
+      </p>
+      <div class="chips">
+        <div class="chip">
+          <span class="sw" style="background: #e3a33c"></span>
+          <div><b>Янтарь</b><code>#E3A33C</code></div>
+        </div>
+        <div class="chip">
+          <span class="sw" style="background: #c4791b"></span>
+          <div><b>Янтарь тёмный</b><code>#C4791B</code></div>
+        </div>
+        <div class="chip">
+          <span class="sw" style="background: #2a2419"></span>
+          <div><b>Чернила</b><code>#2A2419</code></div>
+        </div>
+        <div class="chip">
+          <span class="sw" style="background: #f5efdf"></span>
+          <div><b>Плашка</b><code>#F5EFDF</code></div>
+        </div>
+        <div class="chip">
+          <span class="sw" style="background: #fffdf4"></span>
+          <div><b>Тёплый белый</b><code>#FFFDF4</code></div>
+        </div>
+        <div class="chip">
+          <span class="sw" style="background: #c74a33"></span>
+          <div><b>Запись</b><code>#C74A33</code></div>
+        </div>
+      </div>
+
+      <h2><span class="idx">05</span>Интерфейс: обе темы</h2>
+      <p class="sub">
+        Приложение следует теме ОС. Зелёная точка статуса модели и красный
+        записи — семантические цвета, они вне брендовой палитры.
+      </p>
+
+      <div class="ui-pair">
+        <div>
+          <div class="ui-mock mock-dark">
+            <div class="tb">
+              <svg width="13" height="13" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#E3A33C"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#C4791B"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#EDE4CF"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#EDE4CF"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              klava-nevinovata
+            </div>
+            <div class="body">
+              <div class="side">
+                <div class="wm">klava-nevinovata<span class="cr"></span></div>
+                <div class="nav active">General</div>
+                <div class="nav">Models</div>
+                <div class="nav">Advanced</div>
+                <div class="nav">History</div>
+                <div class="nav">About</div>
+              </div>
+              <div class="content">
+                <div class="sec">General</div>
+                <div class="row">
+                  <span>Transcribe Shortcut</span
+                  ><span class="chip2">Ctrl + Space</span>
+                </div>
+                <div class="row">
+                  <span>Push To Talk</span><span class="tgl off"></span>
+                </div>
+                <div class="sec">Sound</div>
+                <div class="row">
+                  <span>Audio Feedback</span><span class="tgl on"></span>
+                </div>
+                <div class="row">
+                  <span>Microphone</span><span class="chip2">Default</span>
+                </div>
+              </div>
+            </div>
+            <div class="foot">
+              <span><span class="dot"></span>Breeze ASR</span
+              ><span>v0.9.0-3</span>
+            </div>
+          </div>
+          <div class="mock-label">Тёмная тема</div>
+        </div>
+
+        <div>
+          <div class="ui-mock mock-light">
+            <div class="tb">
+              <svg width="13" height="13" viewBox="0 0 32 32">
+                <ellipse
+                  cx="16.5"
+                  cy="3.5"
+                  rx="8.5"
+                  ry="2.5"
+                  fill="none"
+                  stroke="#B9751C"
+                  stroke-width="2.3"
+                  transform="rotate(-9 16.5 3.5)"
+                />
+                <rect
+                  x="10.5"
+                  y="7.5"
+                  width="11"
+                  height="14"
+                  rx="5.5"
+                  fill="#C4791B"
+                />
+                <path
+                  d="M 7 19 a 9 9 0 0 0 18 0"
+                  fill="none"
+                  stroke="#2A2419"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="28"
+                  x2="16"
+                  y2="30.5"
+                  stroke="#2A2419"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              klava-nevinovata
+            </div>
+            <div class="body">
+              <div class="side">
+                <div class="wm">klava-nevinovata<span class="cr"></span></div>
+                <div class="nav active">General</div>
+                <div class="nav">Models</div>
+                <div class="nav">Advanced</div>
+                <div class="nav">History</div>
+                <div class="nav">About</div>
+              </div>
+              <div class="content">
+                <div class="sec">General</div>
+                <div class="row">
+                  <span>Transcribe Shortcut</span
+                  ><span class="chip2">Ctrl + Space</span>
+                </div>
+                <div class="row">
+                  <span>Push To Talk</span><span class="tgl off"></span>
+                </div>
+                <div class="sec">Sound</div>
+                <div class="row">
+                  <span>Audio Feedback</span><span class="tgl on"></span>
+                </div>
+                <div class="row">
+                  <span>Microphone</span><span class="chip2">Default</span>
+                </div>
+              </div>
+            </div>
+            <div class="foot">
+              <span><span class="dot"></span>Breeze ASR</span
+              ><span>v0.9.0-3</span>
+            </div>
+          </div>
+          <div class="mock-label">Светлая тема</div>
+        </div>
+      </div>
+
+      <h2><span class="idx">06</span>Как знак пришёл к финалу</h2>
+      <p class="sub">
+        Три итерации за два дня — каждую убил или спас реальный размер, а не
+        вкус на большом холсте.
+      </p>
+      <div class="hist">
+        <div class="card">
+          <svg width="90" height="90" viewBox="0 0 120 120">
+            <ellipse
+              cx="62"
+              cy="17"
+              rx="24"
+              ry="7.5"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="5.5"
+              transform="rotate(-9 62 17)"
+            />
+            <rect
+              x="24"
+              y="44"
+              width="72"
+              height="58"
+              rx="13"
+              fill="none"
+              stroke="var(--muted)"
+              stroke-width="3.5"
+            />
+            <text
+              x="60"
+              y="86"
+              text-anchor="middle"
+              font-family="ui-monospace, Consolas, monospace"
+              font-weight="700"
+              font-size="34"
+              fill="var(--muted)"
+            >
+              К
+            </text>
+          </svg>
+          <h3>1 · Клавиша «К»</h3>
+          <p class="why">
+            Каламбур целиком, но К дублировала клавишу и не говорила «голос».
+          </p>
+        </div>
+        <div class="card">
+          <svg width="90" height="90" viewBox="0 0 120 120">
+            <ellipse
+              cx="62"
+              cy="15"
+              rx="24"
+              ry="7.5"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="5.5"
+              transform="rotate(-9 62 15)"
+            />
+            <rect
+              x="24"
+              y="34"
+              width="72"
+              height="56"
+              rx="13"
+              fill="none"
+              stroke="var(--muted)"
+              stroke-width="3.5"
+            />
+            <rect
+              x="52"
+              y="46"
+              width="16"
+              height="24"
+              rx="8"
+              fill="var(--muted)"
+            />
+            <path
+              d="M 46 62 a 14 14 0 0 0 28 0"
+              fill="none"
+              stroke="var(--muted)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+            />
+            <line
+              x1="60"
+              y1="76"
+              x2="60"
+              y2="82"
+              stroke="var(--muted)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <h3>2 · Клавиша + микрофон</h3>
+          <p class="why">
+            Все три смысла в одном знаке — но три вложенных элемента умерли на
+            16–24 px: на живой 2K-сборке считывался только нимб.
+          </p>
+        </div>
+        <div class="card">
+          <svg width="90" height="90" viewBox="0 0 120 120">
+            <ellipse
+              cx="62"
+              cy="14"
+              rx="27"
+              ry="8.5"
+              fill="none"
+              stroke="var(--accent)"
+              stroke-width="6"
+              transform="rotate(-9 62 14)"
+            />
+            <rect
+              x="40"
+              y="30"
+              width="40"
+              height="50"
+              rx="20"
+              fill="var(--accent)"
+            />
+            <path
+              d="M 28 70 a 32 32 0 0 0 64 0"
+              fill="none"
+              stroke="var(--ink)"
+              stroke-width="7"
+              stroke-linecap="round"
+            />
+            <line
+              x1="60"
+              y1="102"
+              x2="60"
+              y2="111"
+              stroke="var(--ink)"
+              stroke-width="7"
+              stroke-linecap="round"
+            />
+          </svg>
+          <h3>3 · Микрофон + нимб — финал</h3>
+          <p class="why">
+            Два жирных элемента. Выжил во всех размерах; «Клава» переехала в
+            вордмарк.
+          </p>
+        </div>
+      </div>
+
+      <h2><span class="idx">07</span>Что отгружено и где лежит</h2>
+      <ul class="facts">
+        <li>
+          Релизы: <code>v0.9.0-3</code> (latest) и
+          <code>v0.8.3-4</code> (фолбэк-линия), CI на 5 платформ. Репо
+          переименовано: <code>egsok/klava-nevinovata</code> (редирект со старых
+          имён работает).
+        </li>
+        <li>
+          <code>productName: klava-nevinovata</code>; exe остался
+          <code>handy.exe</code> (завязан на cargo-крейт); с v0.9.5-2 (и
+          v0.8.3-6 в stable-линии) identifier —
+          <code>ru.egorsokolov.klava-nevinovata</code>, данные переносятся
+          автоматически (старая папка <code>com.pais.handy</code> остаётся
+          бэкапом).
+        </li>
+        <li>
+          Инсталлятор мигрирует со старого «Handy»: снос легаси-установки,
+          чистка автостарта и реестра — проверено живой установкой поверх
+          0.9.0-2.
+        </li>
+        <li>
+          Рука Handy в сайдбаре заменена на lucide
+          <code>SlidersHorizontal</code>; донат-блоки upstream'а убраны; все
+          ссылки ведут на свой репо.
+        </li>
+        <li>
+          Исходники дизайна: <code>D:/dev/Handy/rebrand/</code> — SVG-мастера
+          всего + <code>generate.mjs</code> (resvg-js), полный набор PNG
+          пересобирается одной командой.
+        </li>
+        <li>
+          Открыто: маскот «тётя Клава» (машинистка с пучком, очками и нимбом) —
+          для README, стикеров и экрана ошибок; генерация по отдельному промпту.
+        </li>
+      </ul>
+    </div>
+  </body>
 </html>

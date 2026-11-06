@@ -1,7 +1,10 @@
+use crate::language_detection::LanguageStatus;
+use crate::managers::model::ModelManager;
 use crate::managers::transcription::TranscriptionManager;
-use crate::settings::{update_settings, ModelUnloadTimeout};
+use crate::settings::{get_settings, update_settings, ModelUnloadTimeout};
 use serde::Serialize;
 use specta::Type;
+use std::sync::Arc;
 use tauri::{AppHandle, State};
 
 #[derive(Serialize, Type)]
@@ -16,10 +19,26 @@ pub fn set_model_unload_timeout(app: AppHandle, timeout: ModelUnloadTimeout) {
     update_settings(&app, |s| s.model_unload_timeout = timeout);
 }
 
+/// The language transcription on `model_id` will use, for the picker.
+#[tauri::command]
+#[specta::specta]
+pub fn get_language_status(
+    app: AppHandle,
+    model_manager: State<Arc<ModelManager>>,
+    model_id: String,
+) -> LanguageStatus {
+    let settings = get_settings(&app);
+    crate::language_detection::status_for(
+        &settings,
+        model_manager.get_model_info(&model_id).as_ref(),
+        model_manager.language_detector_path().is_some(),
+    )
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn get_model_load_status(
-    transcription_manager: State<TranscriptionManager>,
+    transcription_manager: State<Arc<TranscriptionManager>>,
 ) -> Result<ModelLoadStatus, String> {
     Ok(ModelLoadStatus {
         is_loaded: transcription_manager.is_model_loaded(),
@@ -30,9 +49,9 @@ pub fn get_model_load_status(
 #[tauri::command]
 #[specta::specta]
 pub fn unload_model_manually(
-    transcription_manager: State<TranscriptionManager>,
+    transcription_manager: State<Arc<TranscriptionManager>>,
 ) -> Result<(), String> {
-    transcription_manager
-        .unload_model()
-        .map_err(|e| format!("Failed to unload model: {}", e))
+    transcription_manager.ensure_model_unlocked()?;
+    transcription_manager.request_unload();
+    Ok(())
 }

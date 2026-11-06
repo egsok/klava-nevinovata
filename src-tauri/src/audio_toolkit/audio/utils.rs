@@ -29,6 +29,20 @@ pub fn verify_wav_file<P: AsRef<Path>>(file_path: P, expected_samples: usize) ->
 
 /// Save audio samples as a WAV file
 pub fn save_wav_file<P: AsRef<Path>>(file_path: P, samples: &[f32]) -> Result<()> {
+    save_wav_to_writer(
+        std::io::BufWriter::new(std::fs::File::create(file_path.as_ref())?),
+        samples,
+    )?;
+    debug!("Saved WAV file: {:?}", file_path.as_ref());
+    Ok(())
+}
+
+/// Writes through an already exclusively reserved file handle without reopening
+/// or truncating a path that could belong to another import.
+pub fn save_wav_to_writer<W: std::io::Write + std::io::Seek>(
+    output: W,
+    samples: &[f32],
+) -> Result<()> {
     let spec = WavSpec {
         channels: 1,
         sample_rate: 16000,
@@ -36,7 +50,7 @@ pub fn save_wav_file<P: AsRef<Path>>(file_path: P, samples: &[f32]) -> Result<()
         sample_format: hound::SampleFormat::Int,
     };
 
-    let mut writer = WavWriter::create(file_path.as_ref(), spec)?;
+    let mut writer = WavWriter::new(output, spec)?;
 
     // Convert f32 samples to i16 for WAV
     for sample in samples {
@@ -45,6 +59,5 @@ pub fn save_wav_file<P: AsRef<Path>>(file_path: P, samples: &[f32]) -> Result<()
     }
 
     writer.finalize()?;
-    debug!("Saved WAV file: {:?}", file_path.as_ref());
     Ok(())
 }

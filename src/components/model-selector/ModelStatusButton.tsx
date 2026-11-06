@@ -5,7 +5,6 @@ type ModelStatus =
   | "loading"
   | "downloading"
   | "verifying"
-  | "extracting"
   | "error"
   | "unloaded"
   | "none";
@@ -14,6 +13,8 @@ interface ModelStatusButtonProps {
   status: ModelStatus;
   displayText: string;
   isDropdownOpen: boolean;
+  /** Ready, and transcribing in the background. */
+  busy?: boolean;
   onClick: () => void;
   className?: string;
 }
@@ -22,38 +23,37 @@ const ModelStatusButton: React.FC<ModelStatusButtonProps> = ({
   status,
   displayText,
   isDropdownOpen,
+  busy = false,
   onClick,
   className = "",
 }) => {
-  // Two inks: settled states carry the violet, work-in-progress pulses magenta.
-  // Green/yellow/orange were a traffic light borrowed from outside the brand.
   const getStatusColor = (status: ModelStatus): string => {
     switch (status) {
       case "ready":
-        return "bg-state-soft";
+        return busy
+          ? "bg-moss animate-pulse motion-reduce:animate-none"
+          : "bg-moss";
       case "loading":
-        return "bg-logo-primary animate-pulse";
+        return "bg-warning animate-pulse";
       case "downloading":
         return "bg-logo-primary animate-pulse";
       case "verifying":
-        return "bg-logo-primary animate-pulse";
-      case "extracting":
-        return "bg-logo-primary animate-pulse";
+        return "bg-background-ui animate-pulse";
       case "error":
-        return "bg-red-400";
+        return "bg-error";
       case "unloaded":
-        return "bg-mid-gray/35";
+        return "bg-ink-3/35";
       case "none":
-        return "bg-red-400";
+        return "bg-error";
       default:
-        return "bg-mid-gray/35";
+        return "bg-ink-3/35";
     }
   };
 
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 hover:text-text/80 transition-colors ${className}`}
+      className={`flex items-center gap-2 hover:text-text transition-colors ${className}`}
       title={`Model status: ${displayText}`}
     >
       <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />

@@ -54,7 +54,7 @@ Before you begin, ensure you have the following installed:
 
    ```bash
    mkdir -p src-tauri/resources/models
-   curl -o src-tauri/resources/models/silero_vad_v4.onnx https://blob.handy.computer/silero_vad_v4.onnx
+   curl -L -o src-tauri/resources/models/silero-vad-v6.2-F32.gguf https://huggingface.co/handy-computer/silero-vad-v6.2-gguf/resolve/main/silero-vad-v6.2-F32.gguf
    ```
 
 6. **Run in development mode**:
@@ -311,6 +311,7 @@ Look for issues labeled `good first issue` or `help wanted` if you're new to the
 
 - **Discord**: Join our [Discord community](https://discord.com/invite/WVBeWsNXK4)
 - **Discussions**: Ask questions in [GitHub Discussions](https://github.com/egsok/klava-nevinovata/discussions)
+
 ## 📜 License
 
 By contributing to klava-nevinovata, you agree that your contributions will be licensed under the MIT License. See [LICENSE](LICENSE) for details.

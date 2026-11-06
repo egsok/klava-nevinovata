@@ -94,6 +94,8 @@ impl HandyPasteProvider {
 }
 
 struct MacPending {
+    // Keep the global paste transaction until all asynchronous OS writes finish.
+    _transaction: Arc<crate::clipboard::PasteLease>,
     state: Arc<Mutex<TxState>>,
     saved_text: Option<String>,
     saved_image: Option<tauri::image::Image<'static>>,
@@ -253,6 +255,8 @@ fn spawn_waiter(pending: Arc<Mutex<MacPending>>, app_handle: AppHandle) {
     });
 }
 
+// Keep the lease explicit alongside the existing platform paste inputs.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn run(
     text: &str,
     app_handle: &AppHandle,
@@ -261,6 +265,7 @@ pub(super) fn run(
     auto_submit: bool,
     auto_submit_key: AutoSubmitKey,
     clipboard_handling: ClipboardHandling,
+    transaction: std::sync::Arc<crate::clipboard::PasteLease>,
 ) -> Result<(), String> {
     // Settle any previous transaction first so the snapshot below captures the
     // user's original clipboard, not the previous transcript.
@@ -316,6 +321,7 @@ pub(super) fn run(
     }
 
     let pending = Arc::new(Mutex::new(MacPending {
+        _transaction: transaction,
         state,
         saved_text,
         saved_image,

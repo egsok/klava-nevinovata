@@ -64,6 +64,8 @@ struct SavedFormat {
 }
 
 pub(super) struct WinTxShared {
+    // Keep the global paste transaction until all asynchronous OS writes finish.
+    _transaction: Arc<crate::clipboard::PasteLease>,
     state: Mutex<TxState>,
     text: String,
     snapshot: Mutex<Vec<SavedFormat>>,
@@ -471,7 +473,7 @@ fn on_timer(_hwnd: HWND, shared: &WinTxShared) {
     if let Ok(mut slot) = PENDING.lock() {
         let is_us = slot
             .as_ref()
-            .map(|pending| Arc::as_ptr(pending) as *const WinTxShared == shared as *const _)
+            .map(|pending| std::ptr::eq(Arc::as_ptr(pending), shared))
             .unwrap_or(false);
         if is_us {
             *slot = None;
@@ -571,6 +573,8 @@ fn pump_thread(shared: Arc<WinTxShared>, ready: Sender<Result<(), String>>) {
     }
 }
 
+// Keep the lease explicit alongside the existing platform paste inputs.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn run(
     text: &str,
     app_handle: &tauri::AppHandle,
@@ -579,8 +583,10 @@ pub(super) fn run(
     auto_submit: bool,
     auto_submit_key: AutoSubmitKey,
     clipboard_handling: ClipboardHandling,
+    transaction: std::sync::Arc<crate::clipboard::PasteLease>,
 ) -> Result<(), String> {
     let shared = Arc::new(WinTxShared {
+        _transaction: transaction,
         state: Mutex::new(TxState::new()),
         text: text.to_string(),
         snapshot: Mutex::new(Vec::new()),
