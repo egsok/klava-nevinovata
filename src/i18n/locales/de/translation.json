@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} konnte dieses Modell nicht laden. Versuche es erneut oder wähle ein anderes.",
     "modelLoadFailedTitle": "Modell konnte nicht geladen werden",
     "modelDownloadFailed": "Download fehlgeschlagen",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Text konnte nicht eingefügt werden",
     "pasteFailed": "Der Text konnte nicht in die aktive Anwendung eingefügt werden.",
     "postProcessFailedTitle": "Ohne Nachbearbeitung eingefügt",

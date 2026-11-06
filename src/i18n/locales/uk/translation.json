@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} не вдалося завантажити цю модель. Спробуйте ще раз або виберіть іншу.",
     "modelLoadFailedTitle": "Не вдалося завантажити модель",
     "modelDownloadFailed": "Помилка завантаження",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Не вдалося вставити текст",
     "pasteFailed": "Не вдалося вставити текст до активної програми.",
     "postProcessFailedTitle": "Вставлено без постобробки",

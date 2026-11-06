@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} kon dit model niet laden. Probeer het opnieuw of kies een ander model.",
     "modelLoadFailedTitle": "Model laden mislukt",
     "modelDownloadFailed": "Downloaden mislukt",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Tekst plakken mislukt",
     "pasteFailed": "Tekst kon niet worden geplakt in de actieve applicatie.",
     "postProcessFailedTitle": "Geplakt zonder naverwerking",

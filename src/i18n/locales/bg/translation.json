@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} не можа да зареди този модел. Опитайте отново или изберете друг.",
     "modelLoadFailedTitle": "Моделът не се зареди",
     "modelDownloadFailed": "Изтеглянето е неуспешно",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "Неуспешно поставяне на текст",
     "pasteFailed": "Текстът не можа да бъде поставен в активното приложение.",
     "postProcessFailedTitle": "Поставено без постобработка",

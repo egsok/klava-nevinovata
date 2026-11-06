@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} no ha pogut carregar aquest model. Torna-ho a provar o tria'n un altre.",
     "modelLoadFailedTitle": "No s'ha pogut carregar el model",
     "modelDownloadFailed": "Ha fallat la baixada",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "No s'ha pogut enganxar el text",
     "pasteFailed": "No s'ha pogut enganxar el text a l'aplicació activa.",
     "postProcessFailedTitle": "Enganxat sense postprocessament",

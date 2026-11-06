@@ -24,7 +24,20 @@
 use log::{error, info, warn};
 use std::sync::atomic::{AtomicU64, AtomicU8, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
+
+fn should_monitor_manager(handy_keys_selected: bool, state_exists: bool) -> bool {
+    handy_keys_selected && state_exists
+}
+
+fn manager_is_enabled(app: &AppHandle) -> bool {
+    should_monitor_manager(
+        crate::settings::get_settings(app).keyboard_implementation
+            == crate::settings::KeyboardImplementation::HandyKeys,
+        app.try_state::<crate::shortcut::handy_keys::HandyKeysState>()
+            .is_some(),
+    )
+}
 
 static MANAGER_BEAT: AtomicU64 = AtomicU64::new(0);
 static COORD_BEAT: AtomicU64 = AtomicU64::new(0);
@@ -133,15 +146,8 @@ pub fn start(app: AppHandle) {
     COORD_BEAT.store(now, Ordering::Relaxed);
     MAIN_BEAT.store(now, Ordering::Relaxed);
 
-    // The manager thread only exists for the HandyKeys backend. Read the
-    // setting once here (not in the loop — a hung settings store would take
-    // the watchdog down with it); switching backends needs a restart anyway
-    // for this monitor to follow.
-    let monitor_manager = crate::settings::get_settings(&app).keyboard_implementation
-        == crate::settings::KeyboardImplementation::HandyKeys;
-
     std::thread::spawn(move || {
-        info!("watchdog: started (manager monitoring: {monitor_manager})");
+        info!("watchdog: started");
         let mut manager = Monitor::new("hotkey-manager", &MANAGER_BEAT);
         let mut coordinator = Monitor::new("coordinator", &COORD_BEAT);
         let mut main = Monitor::new("main(event-loop)", &MAIN_BEAT);
@@ -173,9 +179,10 @@ pub fn start(app: AppHandle) {
             }
 
             let now = now_ms();
-            let manager_age = if monitor_manager {
+            let manager_age = if manager_is_enabled(&app) {
                 manager.check(now)
             } else {
+                manager.stalled_since = None;
                 0
             };
             coordinator.check(now);
@@ -193,9 +200,14 @@ pub fn start(app: AppHandle) {
                         manager_age
                     );
                     let app = app.clone();
-                    std::thread::spawn(move || match crate::shortcut::force_reinit(&app) {
-                        Ok(()) => info!("watchdog: keyboard hook reinstalled"),
-                        Err(e) => error!("watchdog: hook reinstall failed: {}", e),
+                    std::thread::spawn(move || {
+                        // A permanent fallback may have happened since the check.
+                        if manager_is_enabled(&app) {
+                            match crate::shortcut::force_reinit(&app) {
+                                Ok(()) => info!("watchdog: keyboard hook reinstalled"),
+                                Err(e) => error!("watchdog: hook reinstall failed: {}", e),
+                            }
+                        }
                     });
                 }
             } else if manager_age == 0 {
@@ -203,4 +215,17 @@ pub fn start(app: AppHandle) {
             }
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn manager_monitor_requires_initialized_state_and_current_backend() {
+        assert!(!should_monitor_manager(true, false));
+        assert!(!should_monitor_manager(false, true));
+        assert!(!should_monitor_manager(false, false));
+        assert!(should_monitor_manager(true, true));
+    }
 }

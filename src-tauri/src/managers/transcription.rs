@@ -992,18 +992,14 @@ impl TranscriptionManager {
 
         let audio_len = audio.len();
         debug!("Audio vector length: {}", audio_len);
-        if audio.is_empty() || (live.is_none() && is_near_silent(&audio)) {
+        let Some(outcome) = decode_recording_audio(audio, live, |audio| self.decode_batch(audio))?
+        else {
             debug!("Empty or near-silent audio; skipping transcription");
             self.maybe_unload_immediately("empty audio");
             return Ok(Transcription {
                 text: String::new(),
                 language: None,
             });
-        }
-
-        let outcome = match live {
-            Some(outcome) => outcome,
-            None => self.decode_batch(audio)?,
         };
         let settings = get_settings(&self.app_handle);
         let language = outcome
@@ -1208,6 +1204,22 @@ impl TranscriptionManager {
                     self.forget_model_if_engine_dropped(active_model, &e.to_string());
                 }
             })
+    }
+}
+
+/// Choose live output or batch decoding, with the fork's silence gate before
+/// any batch work. Shared with the native-free regression test.
+fn decode_recording_audio<T>(
+    audio: Vec<f32>,
+    live: Option<T>,
+    decode: impl FnOnce(Vec<f32>) -> Result<T>,
+) -> Result<Option<T>> {
+    if audio.is_empty() || (live.is_none() && is_near_silent(&audio)) {
+        return Ok(None);
+    }
+    match live {
+        Some(outcome) => Ok(Some(outcome)),
+        None => decode(audio).map(Some),
     }
 }
 
@@ -2081,6 +2093,77 @@ impl Drop for TranscriptionManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn loaded_whisper_arch_disables_fuzzy_correction_with_empty_generic_vocabulary() {
+        let settings = AppSettings {
+            custom_words: vec!["Tauri".into()],
+            ..Default::default()
+        };
+        let mut info = LoadedInfo {
+            arch: "whisper".into(),
+            variant: String::new(),
+            backend: "test".into(),
+            device: "test".into(),
+            on_gpu: false,
+            capabilities: transcribe_cpp::Capabilities {
+                native_sample_rate: 16_000,
+                languages: vec!["en".into()],
+                translate_target_languages: vec![],
+                max_timestamp_kind: transcribe_cpp::TimestampKind::None,
+                supports_language_detect: false,
+                supports_translate: false,
+                supports_streaming: false,
+                supports_spec_decode: false,
+                max_audio_ms: 0,
+            },
+            supports_initial_prompt: true,
+            supports_long_form: true,
+            supports_vocabulary: false,
+        };
+        let language = LanguageDecision {
+            language: None,
+            source: LanguageSource::Model,
+        };
+        let setup = run_setup(&info, &settings, language.clone());
+        assert!(setup.is_whisper);
+        assert!(setup.run_options.vocabulary.is_empty());
+        assert!(setup.custom_words_prompted());
+        info.arch = "parakeet".into();
+        let setup = run_setup(&info, &settings, language.clone());
+        assert!(!setup.is_whisper);
+        assert!(!setup.custom_words_prompted());
+        info.supports_vocabulary = true;
+        assert!(run_setup(&info, &settings, language).custom_words_prompted());
+    }
+
+    #[test]
+    fn recording_path_gates_batch_decoder_but_preserves_live_output() {
+        for level in [0.0, 0.004, 0.006] {
+            let calls = std::cell::Cell::new(0);
+            let result = decode_recording_audio(vec![level; 64], None, |_| {
+                calls.set(calls.get() + 1);
+                Ok("decoded")
+            })
+            .unwrap();
+            assert_eq!(result, (level > 0.005).then_some("decoded"));
+            assert_eq!(calls.get(), usize::from(level > 0.005));
+        }
+        assert_eq!(
+            decode_recording_audio(vec![0.0; 64], Some("live"), |_| {
+                panic!("live output must not decode twice")
+            })
+            .unwrap(),
+            Some("live")
+        );
+        assert_eq!(
+            decode_recording_audio::<()>(vec![], None, |_| {
+                panic!("empty recording must not decode")
+            })
+            .unwrap(),
+            None
+        );
+    }
 
     #[test]
     fn whisper_prompt_never_combines_initial_prompt_with_generic_vocabulary() {

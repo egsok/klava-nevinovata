@@ -4,7 +4,6 @@
 use anyhow::Result;
 use log::{debug, info, warn};
 use std::time::Instant;
-use transcribe_cpp::Transcript;
 
 use super::{
     agreed_language, engine_error, is_near_silent, post_process_transcription_text,
@@ -14,7 +13,8 @@ use crate::audio_toolkit::chunking::Chunker;
 use crate::engine_supervisor::EngineError;
 use crate::managers::audio::create_detector;
 
-/// Tries per chunk when a dictation's cancel interrupts it.
+/// Tries per imported chunk when a dictation's cancel interrupts it.
+/// Whole dictation retries survive foreign cancels until their own cancellation.
 const MAX_CHUNK_ATTEMPTS: usize = 3;
 
 /// Audio handed to the chunker at a time: the first chunk is transcribed
@@ -28,12 +28,79 @@ fn background_uses_whole_clip(is_whisper: bool, source_name: Option<&str>) -> bo
 
 /// What a background transcription asks of whoever runs it.
 pub trait ChunkControl {
+    /// Records the actual mode chosen from the loaded model.
+    fn started(&self, whole_clip: bool);
     /// Called before each feed to the chunker and before each chunk is
     /// decoded. Blocks while dictation is using the engine; `false` stops the
     /// transcription.
     fn proceed(&self) -> bool;
     /// `done` of `total` samples are transcribed.
     fn progress(&self, done: usize, total: usize);
+}
+
+/// The production feed/decode loop; callbacks keep native VAD and workers
+/// outside the control-flow tests.
+fn decode_background_chunks<T>(
+    audio: &[f32],
+    is_whisper: bool,
+    source_name: Option<&str>,
+    control: &dyn ChunkControl,
+    mut feed: impl FnMut(Option<&[f32]>) -> Vec<Vec<f32>>,
+    mut decode: impl FnMut(Vec<f32>) -> std::result::Result<T, EngineError>,
+) -> Result<Option<Vec<T>>> {
+    let whole_clip = background_uses_whole_clip(is_whisper, source_name);
+    control.started(whole_clip);
+    let total = audio.len();
+    let mut pieces = audio.chunks(if whole_clip {
+        total.max(1)
+    } else {
+        FEED_SAMPLES
+    });
+
+    let mut transcripts: Vec<T> = Vec::new();
+    let mut done = 0;
+    control.progress(done, total);
+    loop {
+        // Scoring waits out dictation too, and stops on cancel.
+        if !control.proceed() {
+            return Ok(None);
+        }
+        let (chunks, last) = match pieces.next() {
+            Some(piece) if whole_clip => (vec![piece.to_vec()], true),
+            Some(piece) => (feed(Some(piece)), false),
+            None => (feed(None), true),
+        };
+        for chunk in chunks {
+            let len = chunk.len();
+            if is_near_silent(&chunk) {
+                done += len;
+                control.progress(done, total);
+                continue;
+            }
+            let mut attempts = 0;
+            let transcript = loop {
+                if !control.proceed() {
+                    return Ok(None);
+                }
+                attempts += 1;
+                match decode(chunk.clone()) {
+                    Ok(transcript) => break transcript,
+                    Err(EngineError::Cancelled) if whole_clip || attempts < MAX_CHUNK_ATTEMPTS => {
+                        warn!("A background chunk was cancelled; trying it again");
+                    }
+                    Err(e) => return Err(engine_error(e)),
+                }
+            };
+            transcripts.push(transcript);
+            done += len;
+            control.progress(done, total);
+        }
+        if last {
+            break;
+        }
+    }
+
+    Ok(Some(transcripts))
 }
 
 impl TranscriptionManager {
@@ -67,54 +134,28 @@ impl TranscriptionManager {
         let backend = settings.vad_backend;
         let app_handle = self.app_handle.clone();
         let mut chunker = Chunker::new(Box::new(move || create_detector(backend, &app_handle)));
-        let whole_clip = background_uses_whole_clip(setup.is_whisper, source_name);
-        let mut pieces = audio.chunks(if whole_clip { total } else { FEED_SAMPLES });
-
-        let mut transcripts: Vec<Transcript> = Vec::new();
-        let mut done = 0;
-        control.progress(done, total);
-        loop {
-            // Scoring waits out dictation too, and stops on cancel.
-            if !control.proceed() {
-                return Ok(None);
-            }
-            let (chunks, last) = match pieces.next() {
-                Some(piece) if whole_clip => (vec![piece.to_vec()], true),
-                Some(piece) => (chunker.push(piece), false),
-                None => (chunker.finish(), true),
-            };
-            for chunk in chunks {
-                let len = chunk.len();
-                if is_near_silent(&chunk) {
-                    done += len;
-                    control.progress(done, total);
-                    continue;
+        let Some(transcripts) = decode_background_chunks(
+            &audio,
+            setup.is_whisper,
+            source_name,
+            control,
+            |piece| match piece {
+                Some(piece) => chunker.push(piece),
+                None => chunker.finish(),
+            },
+            |chunk| {
+                let mark = self.engine.cancel_mark();
+                // A cancel between the loop's check and this mark must not
+                // start another whole-clip decode with a fresh generation.
+                if !control.proceed() {
+                    return Err(EngineError::Cancelled);
                 }
-                let mut attempts = 0;
-                let transcript = loop {
-                    if !control.proceed() {
-                        return Ok(None);
-                    }
-                    attempts += 1;
-                    // A fresh mark per chunk: a dictation's cancel stops only
-                    // the chunk it caught, which is then tried again.
-                    let mark = self.engine.cancel_mark();
-                    match self.run_batch(mark, chunk.clone(), &setup.run_options, &active_model) {
-                        Ok(transcript) => break transcript,
-                        Err(EngineError::Cancelled) if attempts < MAX_CHUNK_ATTEMPTS => {
-                            warn!("A background chunk was cancelled; trying it again");
-                        }
-                        Err(e) => return Err(engine_error(e)),
-                    }
-                };
-                transcripts.push(transcript);
-                done += len;
-                control.progress(done, total);
-            }
-            if last {
-                break;
-            }
-        }
+                self.run_batch(mark, chunk, &setup.run_options, &active_model)
+            },
+        )?
+        else {
+            return Ok(None);
+        };
 
         debug!("Transcribed {} chunks in the background", transcripts.len());
         let language = setup.spoken_language(agreed_language(&transcripts).as_deref());
@@ -153,13 +194,149 @@ impl TranscriptionManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cell::Cell;
+
+    #[derive(Default)]
+    struct Control {
+        cancelled: Cell<bool>,
+        whole_clip: Cell<bool>,
+        done: Cell<usize>,
+    }
+
+    impl ChunkControl for Control {
+        fn started(&self, whole_clip: bool) {
+            self.whole_clip.set(whole_clip);
+        }
+
+        fn proceed(&self) -> bool {
+            !self.cancelled.get()
+        }
+
+        fn progress(&self, done: usize, _total: usize) {
+            self.done.set(done);
+        }
+    }
+
+    fn feed(piece: Option<&[f32]>) -> Vec<Vec<f32>> {
+        piece.map(|p| vec![p.to_vec()]).unwrap_or_default()
+    }
 
     #[test]
     fn whisper_dictation_retry_preserves_context_but_imports_stay_chunked() {
-        assert!(background_uses_whole_clip(true, None));
-        assert!(!background_uses_whole_clip(true, Some("interview.wav")));
-        assert!(!background_uses_whole_clip(true, Some("")));
-        assert!(!background_uses_whole_clip(false, None));
-        assert!(!background_uses_whole_clip(false, Some("interview.wav")));
+        let audio = vec![0.1; FEED_SAMPLES + 16_000];
+        for (whisper, source, whole) in [
+            (true, None, true),
+            (true, Some("interview.wav"), false),
+            (true, Some(""), false),
+            (false, None, false),
+        ] {
+            let control = Control::default();
+            let feeds = Cell::new(0);
+            let lengths = decode_background_chunks(
+                &audio,
+                whisper,
+                source,
+                &control,
+                |piece| {
+                    feeds.set(feeds.get() + 1);
+                    feed(piece)
+                },
+                |chunk| Ok(chunk.len()),
+            )
+            .unwrap()
+            .unwrap();
+            if whole {
+                assert_eq!(lengths, vec![audio.len()]);
+                assert_eq!(feeds.get(), 0, "whole dictation must bypass VAD chunking");
+            } else {
+                assert_eq!(lengths, vec![FEED_SAMPLES, 16_000]);
+                assert!(feeds.get() > 0);
+            }
+            assert_eq!(control.whole_clip.get(), whole);
+            assert_eq!(control.done.get(), audio.len());
+        }
+    }
+
+    #[test]
+    fn background_loop_skips_silent_chunks_before_calling_engine() {
+        for source in [None, Some("file.wav")] {
+            for level in [0.004, 0.006] {
+                let control = Control::default();
+                let calls = Cell::new(0);
+                let result =
+                    decode_background_chunks(&[level; 64], true, source, &control, feed, |_| {
+                        calls.set(calls.get() + 1);
+                        Ok(())
+                    })
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(calls.get(), usize::from(level > 0.005));
+                assert_eq!(result.len(), calls.get());
+                assert_eq!(control.done.get(), 64);
+            }
+        }
+        // The file is audible overall; a silent chunk still must not decode.
+        let audio = vec![0.1; 64];
+        let result = decode_background_chunks(
+            &audio,
+            true,
+            Some("file.wav"),
+            &Control::default(),
+            |piece| {
+                piece
+                    .map(|_| vec![vec![0.004; 32], vec![0.1; 32]])
+                    .unwrap_or_default()
+            },
+            |chunk| Ok(chunk.len()),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, vec![32]);
+    }
+
+    #[test]
+    fn foreign_cancels_do_not_fail_whole_retry_but_own_cancel_stops_it() {
+        let control = Control::default();
+        let mut attempts = 0;
+        let result = decode_background_chunks(&[0.1; 64], true, None, &control, feed, |_| {
+            attempts += 1;
+            if attempts <= MAX_CHUNK_ATTEMPTS + 1 {
+                Err(EngineError::Cancelled)
+            } else {
+                Ok("complete")
+            }
+        })
+        .unwrap()
+        .unwrap();
+        assert_eq!(result, vec!["complete"]);
+        assert_eq!(attempts, MAX_CHUNK_ATTEMPTS + 2);
+
+        let mut calls = 0;
+        let result = decode_background_chunks::<()>(&[0.1; 64], true, None, &control, feed, |_| {
+            calls += 1;
+            control.cancelled.set(true);
+            Err(EngineError::Cancelled)
+        })
+        .unwrap();
+        assert!(result.is_none());
+        assert_eq!(calls, 1);
+    }
+
+    #[test]
+    fn imported_file_keeps_bounded_cancellation_retries() {
+        let mut calls = 0;
+        assert!(decode_background_chunks::<()>(
+            &[0.1; 64],
+            true,
+            Some("file.wav"),
+            &Control::default(),
+            feed,
+            |_| {
+                calls += 1;
+                Err(EngineError::Cancelled)
+            },
+        )
+        .is_err());
+        assert_eq!(calls, MAX_CHUNK_ATTEMPTS);
     }
 }

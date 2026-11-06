@@ -915,7 +915,7 @@ impl ShortcutAction for TranscribeAction {
                                                     (
                                                         TranscriptionOutcome::Failed,
                                                         Some(Notice::new(
-                                                            NoticeCode::PasteFailed,
+                                                            NoticeCode::for_paste_error(&e),
                                                             NoticeSource::Dictation,
                                                         )),
                                                     )

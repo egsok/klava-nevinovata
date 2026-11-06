@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} ले यो मोडेल लोड गर्न सकेन। फेरि प्रयास गर्नुहोस् वा अर्को मोडेल छान्नुहोस्।",
     "modelLoadFailedTitle": "मोडेल लोड गर्न सकिएन",
     "modelDownloadFailed": "डाउनलोड असफल भयो",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "टेक्स्ट पेस्ट गर्न सकिएन",
     "pasteFailed": "सक्रिय एपमा टेक्स्ट पेस्ट गर्न सकिएन।",
     "postProcessFailedTitle": "पोस्ट प्रोसेस बिना पेस्ट गरियो",

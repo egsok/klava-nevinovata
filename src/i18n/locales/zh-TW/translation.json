@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} 無法載入此模型。請再試一次或選擇其他模型。",
     "modelLoadFailedTitle": "載入模型失敗",
     "modelDownloadFailed": "下載失敗",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "貼上文字失敗",
     "pasteFailed": "無法將文字貼上至目前作用中的應用程式。",
     "postProcessFailedTitle": "已貼上，未經後處理",

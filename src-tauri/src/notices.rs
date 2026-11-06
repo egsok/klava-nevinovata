@@ -41,6 +41,7 @@ pub enum NoticeSource {
 pub enum NoticeCode {
     TranscriptionFailed,
     PasteFailed,
+    ClipboardBusy,
     NoMicrophone,
     MicPermissionDenied,
     RecordingFailed,
@@ -51,10 +52,19 @@ pub enum NoticeCode {
 }
 
 impl NoticeCode {
+    pub(crate) fn for_paste_error(error: &str) -> Self {
+        if error == crate::clipboard::CLIPBOARD_BUSY {
+            Self::ClipboardBusy
+        } else {
+            Self::PasteFailed
+        }
+    }
+
     fn level(self) -> NoticeLevel {
         match self {
             Self::TranscriptionFailed
             | Self::PasteFailed
+            | Self::ClipboardBusy
             | Self::NoMicrophone
             | Self::MicPermissionDenied
             | Self::RecordingFailed
@@ -69,6 +79,7 @@ impl NoticeCode {
         match self {
             Self::TranscriptionFailed => &strings.transcription_failed_title,
             Self::PasteFailed => &strings.paste_failed_title,
+            Self::ClipboardBusy => &strings.clipboard_busy_title,
             Self::NoMicrophone => &strings.no_input_device_title,
             Self::MicPermissionDenied => &strings.mic_permission_denied_title,
             Self::RecordingFailed => &strings.recording_failed_title,
@@ -227,6 +238,19 @@ pub fn dismiss_overlay_notice(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn busy_restore_selects_distinct_error_notice() {
+        assert_eq!(
+            NoticeCode::for_paste_error(crate::clipboard::CLIPBOARD_BUSY),
+            NoticeCode::ClipboardBusy
+        );
+        assert_eq!(
+            NoticeCode::for_paste_error("input failed"),
+            NoticeCode::PasteFailed
+        );
+        assert_eq!(NoticeCode::ClipboardBusy.level(), NoticeLevel::Error);
+    }
 
     fn dictation(code: NoticeCode) -> Notice {
         Notice::new(code, NoticeSource::Dictation)

@@ -133,6 +133,7 @@ fn settle(
         return;
     }
     p.settled = true;
+    p._transaction.begin_restore();
 
     let (receipt_seen, ownership_lost) = match p.state.lock() {
         Ok(st) => (st.any_receipt_after_injection(), st.ownership_lost),
@@ -339,4 +340,33 @@ pub(super) fn run(
     spawn_waiter(pending, app_handle.clone());
 
     Ok(())
+}
+
+#[cfg(test)]
+mod lease_tests {
+    use super::*;
+
+    #[test]
+    fn macos_pending_state_keeps_lease_until_last_owner_drops() {
+        let lease = crate::clipboard::isolated_paste_lease();
+        let weak = Arc::downgrade(&lease);
+        let pending = Arc::new(Mutex::new(MacPending {
+            _transaction: lease,
+            state: Arc::new(Mutex::new(TxState::new())),
+            saved_text: None,
+            saved_image: None,
+            change_count: 0,
+            provider: None,
+            auto_submit: false,
+            auto_submit_key: AutoSubmitKey::Enter,
+            preserve_transcript: false,
+            transcript: String::new(),
+            settled: false,
+        }));
+        let waiter = Arc::clone(&pending);
+        drop(pending);
+        assert!(weak.upgrade().is_some());
+        drop(waiter);
+        assert!(weak.upgrade().is_none());
+    }
 }

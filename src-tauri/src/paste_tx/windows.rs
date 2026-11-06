@@ -63,7 +63,8 @@ struct SavedFormat {
     data: Vec<u8>,
 }
 
-pub(super) struct WinTxShared {
+// Tests substitute only the app handle; transaction ownership stays identical.
+pub(super) struct WinTxShared<A = tauri::AppHandle> {
     // Keep the global paste transaction until all asynchronous OS writes finish.
     _transaction: Arc<crate::clipboard::PasteLease>,
     state: Mutex<TxState>,
@@ -72,7 +73,7 @@ pub(super) struct WinTxShared {
     /// Copied HBITMAP (as raw usize), restored via SetClipboardData.
     saved_bitmap: Mutex<Option<usize>>,
     sequence: Mutex<u32>,
-    app_handle: tauri::AppHandle,
+    app_handle: A,
     auto_submit: bool,
     auto_submit_key: AutoSubmitKey,
     /// ClipboardHandling::CopyToClipboard — settle by leaving the transcript
@@ -246,6 +247,7 @@ fn flush_pending() {
 /// the concealed promise with plain transcript text, so clipboard history and
 /// managers record it and it survives this transaction's window going away.
 unsafe fn settle_clipboard(shared: &WinTxShared) {
+    shared._transaction.begin_restore();
     if !shared.preserve_transcript {
         restore_snapshot(shared);
         return;
@@ -262,6 +264,7 @@ unsafe fn settle_clipboard(shared: &WinTxShared) {
 
 /// Restores the snapshotted clipboard contents. Safe to call from any thread.
 unsafe fn restore_snapshot(shared: &WinTxShared) {
+    shared._transaction.begin_restore();
     if OpenClipboard(None).is_err() {
         warn!("[reliable-paste] could not open clipboard to restore");
         return;
@@ -627,4 +630,32 @@ pub(super) fn run(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod lease_tests {
+    use super::*;
+
+    #[test]
+    fn windows_pending_state_keeps_lease_until_last_owner_drops() {
+        let lease = crate::clipboard::isolated_paste_lease();
+        let weak = Arc::downgrade(&lease);
+        let pending = Arc::new(WinTxShared {
+            _transaction: lease,
+            state: Mutex::new(TxState::new()),
+            text: String::new(),
+            snapshot: Mutex::new(Vec::new()),
+            saved_bitmap: Mutex::new(None),
+            sequence: Mutex::new(0),
+            app_handle: (),
+            auto_submit: false,
+            auto_submit_key: AutoSubmitKey::Enter,
+            preserve_transcript: false,
+        });
+        let worker = Arc::clone(&pending);
+        drop(pending);
+        assert!(weak.upgrade().is_some());
+        drop(worker);
+        assert!(weak.upgrade().is_none());
+    }
 }

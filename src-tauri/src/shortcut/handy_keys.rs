@@ -48,6 +48,7 @@ use super::handler::handle_shortcut_event;
 /// any event, so events it drained before stalling can never replay actions
 /// after a reinstall.
 static MANAGER_GENERATION: AtomicU64 = AtomicU64::new(0);
+static INIT_LOCK: Mutex<()> = Mutex::new(());
 
 /// Commands that can be sent to the hotkey manager thread
 enum ManagerCommand {
@@ -128,6 +129,7 @@ impl HandyKeysState {
         let manager = HotkeyManager::new_with_blocking()
             .map_err(|e| format!("Failed to create HotkeyManager: {e}"))?;
         let generation = MANAGER_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+        crate::watchdog::beat_manager();
         let thread_handle = thread::spawn(move || {
             Self::manager_thread(cmd_rx, app_clone, generation, manager);
         });
@@ -561,8 +563,8 @@ pub fn validate_shortcut(raw: &str) -> Result<(), String> {
 /// has gotten into a stuck state.
 pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
     let Some(state) = app.try_state::<HandyKeysState>() else {
-        // No existing state — fall back to fresh init
-        return init_shortcuts(app);
+        // Only onboarding/startup may create the first hook.
+        return Ok(());
     };
 
     state.reinstall_hook(app.clone())?;
@@ -599,6 +601,12 @@ pub fn force_reinit(app: &AppHandle) -> Result<(), String> {
 
 /// Initialize handy-keys shortcuts
 pub fn init_shortcuts(app: &AppHandle) -> Result<(), String> {
+    let _init = INIT_LOCK
+        .lock()
+        .map_err(|_| "Shortcut initialization lock poisoned")?;
+    if app.try_state::<HandyKeysState>().is_some() {
+        return Ok(());
+    }
     let state = HandyKeysState::new(app.clone())?;
 
     let default_bindings = settings::get_default_settings().bindings;

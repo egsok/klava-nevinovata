@@ -130,6 +130,16 @@ pub struct TranscriptionJob {
 struct Running {
     entry_id: i64,
     cancelled: Arc<AtomicBool>,
+    whole_clip: bool,
+}
+
+impl Running {
+    fn cancel(&self, dictation_in_progress: bool, interrupt: impl FnOnce()) {
+        self.cancelled.store(true, Ordering::Release);
+        if self.whole_clip && !dictation_in_progress {
+            interrupt();
+        }
+    }
 }
 
 #[derive(Default)]
@@ -268,7 +278,11 @@ impl TranscriptionJobManager {
             let mut jobs = self.lock();
             let was_queued = jobs.unqueue(entry_id);
             if let Some(running) = jobs.running.as_ref().filter(|r| r.entry_id == entry_id) {
-                running.cancelled.store(true, Ordering::Release);
+                running.cancel(crate::tray::dictation_in_progress(&self.app), || {
+                    self.app
+                        .state::<Arc<TranscriptionManager>>()
+                        .cancel_transcription();
+                });
             }
             self.sync_job_active(&jobs);
             (was_queued, jobs.is_idle())
@@ -318,6 +332,7 @@ impl TranscriptionJobManager {
                 jobs.running = Some(Running {
                     entry_id,
                     cancelled: Arc::clone(&cancelled),
+                    whole_clip: false,
                 });
                 (entry_id, cancelled)
             };
@@ -453,6 +468,14 @@ struct Control<'a> {
 }
 
 impl ChunkControl for Control<'_> {
+    fn started(&self, whole_clip: bool) {
+        if let Some(running) = self.manager.lock().running.as_mut() {
+            if running.entry_id == self.entry_id {
+                running.whole_clip = whole_clip;
+            }
+        }
+    }
+
     fn proceed(&self) -> bool {
         // Dictation goes first: wait out a recording and its transcription.
         // A chunk started while a stream is open would end that stream.
@@ -484,6 +507,23 @@ impl ChunkControl for Control<'_> {
 #[cfg(test)]
 mod import_tests {
     use super::*;
+
+    #[test]
+    fn cancelling_whole_retry_interrupts_engine_only_without_dictation() {
+        for (whole_clip, dictation, expected_interrupts) in
+            [(true, false, 1), (true, true, 0), (false, false, 0)]
+        {
+            let running = Running {
+                entry_id: 1,
+                cancelled: Arc::new(AtomicBool::new(false)),
+                whole_clip,
+            };
+            let interrupts = Cell::new(0);
+            running.cancel(dictation, || interrupts.set(interrupts.get() + 1));
+            assert!(running.cancelled.load(Ordering::Acquire));
+            assert_eq!(interrupts.get(), expected_interrupts);
+        }
+    }
 
     #[test]
     fn concurrent_imports_at_identical_time_own_distinct_wavs() {

@@ -7,7 +7,7 @@ use enigo::{Direction, Enigo, Key, Keyboard};
 use log::{info, warn};
 use std::borrow::Cow;
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 #[cfg(target_os = "linux")]
 use std::sync::OnceLock;
 use std::sync::{mpsc, Arc};
@@ -15,37 +15,70 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
-static PASTE_ACTIVE: once_cell::sync::Lazy<Arc<AtomicBool>> =
-    once_cell::sync::Lazy::new(|| Arc::new(AtomicBool::new(false)));
+const PASTE_IDLE: u8 = 0;
+const PASTE_OUTPUT: u8 = 1;
+const PASTE_RESTORING: u8 = 2;
+pub(crate) const CLIPBOARD_BUSY: &str =
+    "Clipboard restoration is still busy. Try pasting again after it finishes, or restart the app.";
+
+static PASTE_ACTIVE: once_cell::sync::Lazy<Arc<AtomicU8>> =
+    once_cell::sync::Lazy::new(|| Arc::new(AtomicU8::new(PASTE_IDLE)));
 
 /// Shared ownership spans the paste caller and any asynchronous restoration.
 /// A timeout never releases a still-running OS write to race the next paste.
 pub(crate) struct PasteLease {
-    active: Arc<AtomicBool>,
+    active: Arc<AtomicU8>,
+}
+
+impl PasteLease {
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    fn resume_output(&self) {
+        self.active.store(PASTE_OUTPUT, Ordering::Release);
+    }
+
+    pub(crate) fn begin_restore(&self) {
+        self.active.store(PASTE_RESTORING, Ordering::Release);
+    }
 }
 
 impl Drop for PasteLease {
     fn drop(&mut self) {
-        self.active.store(false, Ordering::Release);
+        self.active.store(PASTE_IDLE, Ordering::Release);
     }
 }
 
+#[cfg(all(test, any(target_os = "windows", target_os = "macos")))]
+pub(crate) fn isolated_paste_lease() -> Arc<PasteLease> {
+    acquire_paste_lease(&Arc::new(AtomicU8::new(PASTE_IDLE)), Duration::ZERO).unwrap()
+}
+
 fn acquire_paste_lease(
-    active: &Arc<AtomicBool>,
+    active: &Arc<AtomicU8>,
     timeout: Duration,
 ) -> Result<Arc<PasteLease>, String> {
-    let started = Instant::now();
+    let mut restoring_since = None;
     loop {
         if active
-            .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+            .compare_exchange(
+                PASTE_IDLE,
+                PASTE_OUTPUT,
+                Ordering::Acquire,
+                Ordering::Relaxed,
+            )
             .is_ok()
         {
             return Ok(Arc::new(PasteLease {
                 active: Arc::clone(active),
             }));
         }
-        if started.elapsed() >= timeout {
-            return Err("Clipboard is busy with a previous paste or restore. Your transcription is saved in History; try again after it finishes.".to_string());
+        // Direct typing, scripts and the reliable-paste receipt window may
+        // legitimately take seconds. Only a stalled restore rejects a paste.
+        if active.load(Ordering::Acquire) == PASTE_RESTORING {
+            if restoring_since.get_or_insert_with(Instant::now).elapsed() >= timeout {
+                return Err(CLIPBOARD_BUSY.to_string());
+            }
+        } else {
+            restoring_since = None;
         }
         std::thread::sleep(Duration::from_millis(10));
     }
@@ -241,14 +274,19 @@ fn finish_clipboard_paste(
     std::thread::spawn(move || {
         // This lease outlives the caller's timeout. No subsequent paste can
         // publish anything until the actual OS restore has returned.
-        let _transaction = transaction;
         std::thread::sleep(Duration::from_millis(paste_delay_after_ms));
+        transaction.begin_restore();
         restore_clipboard();
         let _ = finished_tx.send(());
     });
-    finished_rx
-        .recv_timeout(Duration::from_millis(paste_delay_after_ms).saturating_add(SAVE_CLIPBOARD_TIMEOUT))
-        .map_err(|_| "Clipboard restore has not finished. The transcription is saved in History; new pastes wait until restoration finishes.".to_string())?;
+    if finished_rx
+        .recv_timeout(
+            Duration::from_millis(paste_delay_after_ms).saturating_add(SAVE_CLIPBOARD_TIMEOUT),
+        )
+        .is_err()
+    {
+        warn!("Clipboard restoration is still pending; preserving the paste result");
+    }
     paste_result
 }
 
@@ -1062,6 +1100,9 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
                 match reliable_result {
                     Ok(()) => return Ok(()),
                     Err(e) => {
+                        // A failed reliable publish may already have restored
+                        // its snapshot before returning. Legacy now owns output.
+                        transaction.resume_output();
                         log::warn!("Reliable paste unavailable ({e}); falling back to legacy paste")
                     }
                 }
@@ -1108,12 +1149,13 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::AtomicBool;
 
     #[test]
     fn clipboard_restore_finishes_even_after_injection_failure() {
         for paste_result in [Ok(()), Err("input failed".to_string())] {
             let expected = paste_result.clone();
-            let active = Arc::new(AtomicBool::new(false));
+            let active = Arc::new(AtomicU8::new(PASTE_IDLE));
             let transaction = acquire_paste_lease(&active, Duration::ZERO).unwrap();
             let restored = Arc::new(AtomicBool::new(false));
             let restored_worker = Arc::clone(&restored);
@@ -1129,7 +1171,7 @@ mod tests {
 
     #[test]
     fn timed_out_restore_keeps_next_paste_out_until_its_actual_write_finishes() {
-        let active = Arc::new(AtomicBool::new(false));
+        let active = Arc::new(AtomicU8::new(PASTE_IDLE));
         let transaction = acquire_paste_lease(&active, Duration::ZERO).unwrap();
         let clipboard = Arc::new(std::sync::Mutex::new("transcript A".to_string()));
         let clipboard_a = Arc::clone(&clipboard);
@@ -1140,7 +1182,7 @@ mod tests {
             *clipboard_a.lock().unwrap() = "original".into();
             done_tx.send(()).unwrap();
         });
-        assert!(result.is_err());
+        assert_eq!(result, Ok(()));
         drop(transaction); // The original caller has already returned.
         assert!(acquire_paste_lease(&active, Duration::ZERO).is_err());
         assert_eq!(*clipboard.lock().unwrap(), "transcript A");
@@ -1148,19 +1190,34 @@ mod tests {
         done_rx.recv_timeout(Duration::from_secs(5)).unwrap();
         let _b = acquire_paste_lease(&active, Duration::from_secs(1)).unwrap();
         assert_eq!(*clipboard.lock().unwrap(), "original");
-        *clipboard.lock().unwrap() = "transcript B".into();
-        assert_eq!(*clipboard.lock().unwrap(), "transcript B");
     }
 
     #[test]
-    fn asynchronous_reliable_paste_keeps_the_same_lease_after_caller_returns() {
-        let active = Arc::new(AtomicBool::new(false));
+    fn active_output_and_receipt_wait_outlive_restore_timeout_without_rejection() {
+        // The same OUTPUT phase covers Direct/scripts and Reliable Paste's
+        // receipt window. A restore timeout must not be measured against it.
+        let active = Arc::new(AtomicU8::new(PASTE_IDLE));
         let caller = acquire_paste_lease(&active, Duration::ZERO).unwrap();
-        let pending_restore = Arc::clone(&caller);
+        let pending = Arc::clone(&caller);
         drop(caller);
-        assert!(acquire_paste_lease(&active, Duration::ZERO).is_err());
-        drop(pending_restore);
-        assert!(acquire_paste_lease(&active, Duration::ZERO).is_ok());
+        let waiting = Arc::clone(&active);
+        let (result_tx, result_rx) = mpsc::channel();
+        let next = std::thread::spawn(move || {
+            assert!(result_tx
+                .send(acquire_paste_lease(&waiting, Duration::from_millis(20)))
+                .is_ok());
+        });
+        assert!(matches!(
+            result_rx.recv_timeout(Duration::from_millis(100)),
+            Err(mpsc::RecvTimeoutError::Timeout)
+        ));
+        pending.begin_restore();
+        drop(pending);
+        assert!(result_rx
+            .recv_timeout(Duration::from_secs(2))
+            .unwrap()
+            .is_ok());
+        next.join().unwrap();
     }
 
     #[cfg(target_os = "linux")]

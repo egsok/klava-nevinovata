@@ -984,6 +984,8 @@
     "modelLoadFailed": "{{appName}} はこのモデルを読み込めませんでした。もう一度試すか、別のモデルを選択してください。",
     "modelLoadFailedTitle": "モデルの読み込みに失敗しました",
     "modelDownloadFailed": "ダウンロードに失敗しました",
+    "clipboardBusyTitle": "Clipboard Busy",
+    "clipboardBusy": "Text could not be pasted because clipboard restoration has not finished. Wait for it to finish or restart the app. If the recording is available in History, copy the text from there.",
     "pasteFailedTitle": "テキストの貼り付けに失敗しました",
     "pasteFailed": "アクティブなアプリにテキストを貼り付けられませんでした。",
     "postProcessFailedTitle": "後処理なしで貼り付けました",
