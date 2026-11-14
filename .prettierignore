@@ -2,6 +2,8 @@
 node_modules
 bun.lock
 package-lock.json
+# Vendored upstream source: preserve its original formatting/provenance.
+vendor
 
 # Build outputs
 dist

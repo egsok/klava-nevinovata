@@ -21,9 +21,17 @@ const NOTICE_DISPLAY: Record<NoticeCode, NoticeDisplay> = {
     title: "errors.clipboardBusyTitle",
     explanation: (t) => t("errors.clipboardBusy"),
   },
+  PasteBlockedElevated: {
+    title: "errors.pasteBlockedElevatedTitle",
+    explanation: (t) => t("errors.pasteBlockedElevated"),
+  },
   NoMicrophone: {
     title: "errors.noInputDeviceTitle",
     explanation: (t) => t("errors.noInputDevice"),
+  },
+  MicrophoneSilent: {
+    title: "errors.microphoneSilentTitle",
+    explanation: (t) => t("errors.microphoneSilent"),
   },
   MicPermissionDenied: {
     title: "errors.micPermissionDeniedTitle",
@@ -38,6 +46,10 @@ const NOTICE_DISPLAY: Record<NoticeCode, NoticeDisplay> = {
   ModelLoadFailed: {
     title: "errors.modelLoadFailedTitle",
     explanation: (t) => t("errors.modelLoadFailed"),
+  },
+  NoModelSelected: {
+    title: "errors.noModelSelectedTitle",
+    explanation: (t) => t("errors.noModelSelected"),
   },
   PostProcessFailed: {
     title: "errors.postProcessFailedTitle",

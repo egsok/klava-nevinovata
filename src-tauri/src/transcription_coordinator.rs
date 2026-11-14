@@ -1571,6 +1571,26 @@ mod tests {
         assert_eq!(state.stage, Stage::Idle);
     }
 
+    /// A release queued behind microphone initialization keeps its edge time.
+    #[test]
+    fn auto_mode_tap_survives_first_activation_start_latency() {
+        let mode = ShortcutActivation::HoldOrToggle;
+        let mut state = CoordinatorState::new();
+        let t0 = Instant::now();
+        let effects = state.on_queued_input(input(mode, true), t0, t0);
+        assert!(matches!(effects[1], Some(Effect::Start { .. })));
+
+        // Key-up occurs at 150ms; microphone initialization ends at 400ms.
+        let effects = state.on_queued_input(input(mode, false), t0 + ms(150), t0 + ms(400));
+        assert!(effects.iter().all(Option::is_none));
+        assert!(state.on_grace_expired().is_none());
+        assert_eq!(state.stage, Stage::Recording(BINDING.to_string()));
+        assert!(state.is_locked(), "the tap must lock the session on");
+
+        let effects = state.on_queued_input(input(mode, true), t0 + ms(5000), t0 + ms(5000));
+        assert!(matches!(effects[1], Some(Effect::Stop { .. })));
+    }
+
     /// Hold-or-toggle: a locked session ignores stray releases — only a press
     /// ends it.
     #[test]
