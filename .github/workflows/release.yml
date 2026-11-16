@@ -90,7 +90,7 @@ jobs:
     with:
       platform: ${{ matrix.platform }}
       target: ${{ matrix.target }}
-      build-args: ${{ matrix.args }}
+      build-args: ${{ matrix.args }} -- --locked
       sign-binaries: false
       asset-prefix: "klava-nevinovata"
       upload-artifacts: false

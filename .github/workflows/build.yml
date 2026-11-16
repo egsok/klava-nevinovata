@@ -208,11 +208,11 @@ jobs:
 
       - name: install frontend dependencies
         if: ${{ !(contains(inputs.platform, 'windows') && contains(inputs.target, 'aarch64')) }}
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: install frontend dependencies (Windows ARM64)
         if: ${{ contains(inputs.platform, 'windows') && contains(inputs.target, 'aarch64') }}
-        run: bun install --cpu=arm64
+        run: bun install --frozen-lockfile --cpu=arm64
 
       - name: rustup install target
         if: ${{ inputs.target != '' && !contains(inputs.target, 'x86_64-unknown-linux-gnu') && !contains(inputs.target, 'aarch64-unknown-linux-gnu') && !contains(inputs.target, 'x86_64-pc-windows-msvc') }}
@@ -398,7 +398,7 @@ jobs:
           bun run build
           (
             cd src-tauri
-            if [ "$PROFILE" = "release" ]; then cargo build --release; else cargo build; fi
+            if [ "$PROFILE" = "release" ]; then cargo build --locked --release; else cargo build --locked; fi
           )
           # The install manifest sits next to libtranscribe in <crate-out>/lib.
           # Pick the newest match in case a stale build dir lingers in the cache.
