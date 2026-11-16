@@ -310,11 +310,12 @@ fn paste_via_clipboard(
     text: &str,
     app_handle: &AppHandle,
     paste_method: &PasteMethod,
-    paste_delay_ms: u64,
-    paste_delay_after_ms: u64,
+    paste_delays: (u64, u64),
     restore: bool,
     transaction: Arc<PasteLease>,
+    #[cfg(target_os = "windows")] modifier_release: &mut input::ModifierReleaseWait,
 ) -> Result<(), String> {
+    let (paste_delay_ms, paste_delay_after_ms) = paste_delays;
     // When the user wants the transcription to stay on the clipboard
     // (CopyToClipboard), restoring the old content right after would undo
     // that — skip the snapshot entirely.
@@ -353,6 +354,11 @@ fn paste_via_clipboard(
     write_text_to_clipboard(app_handle, text)?;
 
     std::thread::sleep(Duration::from_millis(paste_delay_ms));
+
+    // Stay on the worker thread. A release during the existing paste delay
+    // needs no additional wait, and the main thread remains free to run.
+    #[cfg(target_os = "windows")]
+    modifier_release.wait();
 
     // Capture key injection errors so restoration is scheduled on both paths.
     let paste_result = (|| -> Result<(), String> {
@@ -1192,6 +1198,9 @@ fn paste_as_configured(
             )?;
         }
         PasteMethod::CtrlV | PasteMethod::CtrlShiftV | PasteMethod::ShiftInsert => {
+            // The reliable attempt and legacy fallback share one release deadline.
+            #[cfg(target_os = "windows")]
+            let mut modifier_release = input::ModifierReleaseWait::new();
             // Debug-gated receipt-sequenced paste (#502): restore the clipboard
             // after the target actually reads the transcript, not on a timer.
             // On success it fully handles the paste (including auto-submit and
@@ -1199,6 +1208,11 @@ fn paste_as_configured(
             // the legacy path untouched.
             #[cfg(any(target_os = "macos", target_os = "windows"))]
             if settings.reliable_paste {
+                // Wait before the main-thread transaction publishes the text
+                // and injects the chord; never hold up its message pump.
+                #[cfg(target_os = "windows")]
+                modifier_release.wait();
+
                 // Runs entirely on the main thread, as it requires.
                 let (text, app) = (text.clone(), app_handle.clone());
                 let (auto_submit, auto_submit_key, clipboard_handling) = (
@@ -1234,10 +1248,11 @@ fn paste_as_configured(
                 &text,
                 &app_handle,
                 &paste_method,
-                paste_delay_ms,
-                paste_delay_after_ms,
+                (paste_delay_ms, paste_delay_after_ms),
                 restore,
                 Arc::clone(&transaction),
+                #[cfg(target_os = "windows")]
+                &mut modifier_release,
             )?
         }
         PasteMethod::ExternalScript => {

@@ -3,7 +3,11 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
 #[cfg(target_os = "windows")]
+mod modifier_release;
+#[cfg(target_os = "windows")]
 mod windows;
+#[cfg(target_os = "windows")]
+pub(crate) use modifier_release::ModifierReleaseWait;
 
 #[cfg(target_os = "macos")]
 mod macos {
