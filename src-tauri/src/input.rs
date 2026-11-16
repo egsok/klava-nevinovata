@@ -2,6 +2,9 @@ use enigo::{Enigo, Key, Keyboard, Mouse, Settings};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
+#[cfg(target_os = "windows")]
+mod windows;
+
 #[cfg(target_os = "macos")]
 mod macos {
     use super::Key;
@@ -176,12 +179,16 @@ pub fn get_cursor_position(app_handle: &AppHandle) -> Option<(i32, i32)> {
 /// handling the key need the modifier to still be down — the hold insures
 /// against those. Callers that can detect a failed chord (e.g. the
 /// receipt-sequenced paste path) may use a much shorter hold.
+#[cfg(target_os = "windows")]
+pub fn send_paste_ctrl_v(enigo: &mut Enigo, hold_ms: u64) -> Result<(), String> {
+    windows::send_paste(false, hold_ms, enigo.get_marker_value())
+}
+
+#[cfg(not(target_os = "windows"))]
 pub fn send_paste_ctrl_v(enigo: &mut Enigo, hold_ms: u64) -> Result<(), String> {
     // Platform-specific key definitions
     #[cfg(target_os = "macos")]
     let (modifier_key, v_key_code) = (Key::Meta, macos::command_v_key());
-    #[cfg(target_os = "windows")]
-    let (modifier_key, v_key_code) = (Key::Control, Key::Other(0x56)); // VK_V
     #[cfg(target_os = "linux")]
     let (modifier_key, v_key_code) = (Key::Control, Key::Unicode('v'));
 
@@ -205,12 +212,16 @@ pub fn send_paste_ctrl_v(enigo: &mut Enigo, hold_ms: u64) -> Result<(), String> 
 /// Sends a Ctrl+Shift+V paste command.
 /// This is commonly used in terminal applications on Linux to paste without formatting.
 /// Note: On Wayland, this may not work - callers should check for Wayland and use alternative methods.
+#[cfg(target_os = "windows")]
+pub fn send_paste_ctrl_shift_v(enigo: &mut Enigo, hold_ms: u64) -> Result<(), String> {
+    windows::send_paste(true, hold_ms, enigo.get_marker_value())
+}
+
+#[cfg(not(target_os = "windows"))]
 pub fn send_paste_ctrl_shift_v(enigo: &mut Enigo, hold_ms: u64) -> Result<(), String> {
     // Platform-specific key definitions
     #[cfg(target_os = "macos")]
     let (modifier_key, v_key_code) = (Key::Meta, macos::command_v_key());
-    #[cfg(target_os = "windows")]
-    let (modifier_key, v_key_code) = (Key::Control, Key::Other(0x56)); // VK_V
     #[cfg(target_os = "linux")]
     let (modifier_key, v_key_code) = (Key::Control, Key::Unicode('v'));
 
