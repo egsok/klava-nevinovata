@@ -14,7 +14,7 @@
 
 `klava-nevinovata` is my daily-driver fork of Handy, the offline speech-to-text desktop app. It stays close to upstream while adding fixes for recognition quality and reliability issues I encounter in everyday Russian dictation on Windows.
 
-Current fork release: `0.9.8-1`, based on upstream `v0.9.8`.
+Release [0.10.1-3](https://github.com/egsok/klava-nevinovata/releases/tag/v0.10.1-3) is based on Handy 0.10.1. Choose Russian alone or together with English during setup, and the app will recommend **Breeze-ASR-25**. You can also transcribe audio and video files from History.
 
 ## What's different from upstream
 
@@ -23,7 +23,7 @@ Current fork release: `0.9.8-1`, based on upstream `v0.9.8`.
 Every change in this section directly improves the transcription itself by fixing recurring recognition failures.
 
 - **Fewer Whisper hallucinations.** Silence and uncertain audio are much less likely to turn into repeated sentences or subtitle-like phrases such as “Продолжение следует...”. The decoder carries at most 128 previous-context tokens, collapses repeated sentences, and removes known hallucinations only when a whole sentence matches, preserving real speech that happens to contain the same words.
-- **Custom transcription prompt improves Whisper recognition and controls punctuation style.** A per-language prompt helps Whisper models recognize names and specialized terminology, improves punctuation, and lets you specify how that punctuation should look. Whisper Turbo makes the effect especially visible: without a prompt, it often turns Russian dictation into an almost punctuation-free wall of text. The default Russian prompt fixes this behavior, and you can customize it in Settings → Advanced.
+- **Transcription Prompt for mixed Russian and English speech.** New installations start with **V3 — Ru-En**, which asks the model to keep English terms such as GitHub and CI/CD in Latin script. For this kind of dictation with **Whisper Large v3 Turbo**, use the prompt and set the transcription language to Russian. With these settings, quality is comparable to Breeze-ASR-25. Customize the prompt in Settings → Advanced. Updates preserve your existing choice.
 - **Punctuation that survives long dictations.** `condition_on_prev_tokens=true` keeps decoder context between whisper.cpp's 30-second windows, so punctuation and sentence continuity do not fall apart after the first window.
 - **Readable Cyrillic output from Breeze ASR.** Deterministic post-processing restores spaces between Cyrillic/Cyrillic and Cyrillic/Latin words that Breeze can glue together, while preserving common abbreviations such as `.NET` and `PDF`.
 
@@ -35,9 +35,9 @@ The [Russian IT-speech benchmark](https://egorsokolov.ru/ai/whisper-asr-benchmar
 
 ### Reliability and quality of life
 
-- **Full clipboard preservation in the standard paste path.** Files, images, HTML, and text are restored after the transcript is pasted. Upstream PR [#1231](https://github.com/cjpais/Handy/pull/1231) improved the legacy path, but it still snapshots only text or an image there; the fork keeps the broader implementation. Upstream's newer debug-gated reliable-paste path remains available as well.
+- **Clipboard restoration after paste.** With the standard paste method, the app tries to restore the clipboard content you copied before dictating. It supports a list of files, an image, HTML or plain text. Experimental Reliable Paste is available in Debug settings.
 - **Clipboard timeout protection.** A slow or suspended clipboard owner cannot block the app's main thread indefinitely. If the snapshot times out, the transcript is still pasted and the unavailable old clipboard is not mistaken for an intentionally empty one.
-- **Hotkey watchdog and high-priority Windows hook.** The fork tracks modifier resyncs, monitors the hotkey pipeline for stalls, and runs the low-level keyboard hook at time-critical priority. Official `handy-keys` 0.3.3 already includes the live modifier-state correction; the bundled fork carries the additional diagnostics and scheduling safeguards.
+- **Windows hotkey and paste safeguards.** The fork monitors the hotkey pipeline for stalls and raises the priority of the keyboard hook thread. Before sending the paste shortcut, the app waits for physical modifier keys to be released and sends the shortcut's key events in one batch.
 - **Atomic settings updates.** Read-modify-write operations are serialized, preventing concurrent changes from silently resetting settings such as history retention.
 
 ### Visual identity
@@ -50,7 +50,7 @@ The [Russian IT-speech benchmark](https://egorsokolov.ru/ai/whisper-asr-benchmar
 
 Pre-built unsigned installers are published on [Releases](https://github.com/egsok/klava-nevinovata/releases). The older `0.8.3-N` stable line remains there as a fallback.
 
-- **Windows:** download `klava-nevinovata_0.9.8-1_x64-setup.exe` (NSIS) or the `.msi`. If SmartScreen shows “Windows protected your PC”, select **More info → Run anyway**.
+- **Windows:** use the Windows installer ending in `_x64-setup.exe` in the release's download table. An `.msi` is also available under Assets. If SmartScreen shows “Windows protected your PC”, select **More info → Run anyway**.
 - **Linux:** download the `.deb`, `.AppImage`, or `.rpm` build for your distribution.
 - **macOS:** use `aarch64.dmg` for Apple Silicon or `x64.dmg` for Intel Macs, then drag `klava-nevinovata.app` to `/Applications`.
 
@@ -117,7 +117,24 @@ If the recording overlay is empty or bordered, fully quit the app and launch a n
 env -u HANDY_NO_GTK_LAYER_SHELL GDK_BACKEND=wayland handy
 ```
 
-If this works, apply `GDK_BACKEND=wayland` only to this app's launcher. This workaround does not work with the upstream 0.9.6 AppImage, which forces X11.
+If this works, apply `GDK_BACKEND=wayland` only to this app's launcher.
+
+The AppImage forces `GDK_BACKEND=x11` in its launch script, after your environment, so
+`GDK_BACKEND=wayland ./Handy.AppImage` has no effect. Use `HANDY_GDK_BACKEND` instead; Handy copies it
+into `GDK_BACKEND` before GTK starts:
+
+```bash
+HANDY_GDK_BACKEND=wayland ./klava-nevinovata_x.y.z_amd64.AppImage
+```
+
+For a launcher, put the variable in the `.desktop` entry, for example
+`Exec=env HANDY_GDK_BACKEND=wayland /path/to/klava-nevinovata_x.y.z_amd64.AppImage`.
+
+Try native Wayland if the AppImage shows a frozen Language dropdown, a black window after closing
+to the tray and relaunching ([#1729](https://github.com/cjpais/Handy/issues/1729)), or exits with
+`Failed to initialize gtk backend` on a Wayland-only compositor such as Niri without XWayland
+([#2034](https://github.com/cjpais/Handy/issues/2034)). The AppImage defaults to X11 because of
+[tauri#8541](https://github.com/tauri-apps/tauri/issues/8541), so this stays opt-in.
 
 ## License
 
