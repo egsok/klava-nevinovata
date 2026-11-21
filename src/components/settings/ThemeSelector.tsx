@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Dropdown } from "../ui/Dropdown";
 import { SettingContainer } from "../ui/SettingContainer";
 import { useSettings } from "@/hooks/useSettings";
-import { applyTheme, THEME_OPTIONS } from "@/lib/utils/theme";
+import { applyTheme, getStoredTheme, THEME_OPTIONS } from "@/lib/utils/theme";
 import type { Theme } from "@/bindings";
 
 interface ThemeSelectorProps {
@@ -16,7 +16,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = React.memo(
     const { t } = useTranslation();
     const { settings, updateSetting } = useSettings();
 
-    const currentTheme: Theme = settings?.theme ?? "system";
+    const currentTheme: Theme = settings?.theme ?? getStoredTheme();
 
     const themeOptions = THEME_OPTIONS.map((value) => ({
       value,

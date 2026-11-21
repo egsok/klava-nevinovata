@@ -506,7 +506,7 @@ pub struct AppSettings {
     pub append_trailing_space: bool,
     #[serde(default = "default_app_language")]
     pub app_language: String,
-    #[serde(default = "default_theme")]
+    #[serde(default = "legacy_theme")]
     pub theme: Theme,
     #[serde(default)]
     pub experimental_enabled: bool,
@@ -716,7 +716,8 @@ fn default_sound_theme() -> SoundTheme {
     SoundTheme::Marimba
 }
 
-fn default_theme() -> Theme {
+// Settings written before the appearance selector followed the operating system.
+fn legacy_theme() -> Theme {
     Theme::System
 }
 
@@ -1065,7 +1066,7 @@ pub fn get_default_settings() -> AppSettings {
         mute_while_recording: false,
         append_trailing_space: false,
         app_language: default_app_language(),
-        theme: default_theme(),
+        theme: Theme::Light,
         experimental_enabled: false,
         lazy_stream_close: false,
         airpods_mode: false,
@@ -1266,9 +1267,10 @@ fn salvage_settings(stored: &serde_json::Value) -> AppSettings {
         warn!("Stored settings are not a JSON object; falling back to defaults");
         return get_default_settings();
     };
-    // An existing store without a prompt predates the preset for new installs.
+    // Preserve historical defaults when repairing an existing store.
     let defaults = AppSettings {
         transcription_prompt: None,
+        theme: legacy_theme(),
         ..get_default_settings()
     };
 
@@ -1623,6 +1625,21 @@ mod tests {
         drop(guard);
         reader.join().unwrap();
         assert_eq!(result.unwrap(), expected);
+    }
+
+    #[test]
+    fn light_theme_is_a_fresh_install_default() {
+        assert_eq!(get_default_settings().theme, Theme::Light);
+        for (stored, expected) in [
+            (serde_json::json!({}), Theme::System),
+            (serde_json::json!({"theme": "system"}), Theme::System),
+            (serde_json::json!({"theme": "dark"}), Theme::Dark),
+            (serde_json::json!({"theme": "light"}), Theme::Light),
+        ] {
+            let loaded: AppSettings = serde_json::from_value(stored.clone()).unwrap();
+            assert_eq!(loaded.theme, expected);
+            assert_eq!(salvage_settings(&stored).theme, expected);
+        }
     }
 
     #[test]

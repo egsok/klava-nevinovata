@@ -17,6 +17,7 @@ import { commands, type Theme } from "@/bindings";
  */
 
 export const THEME_STORAGE_KEY = "handy.theme";
+const INITIAL_THEME: Theme = "light";
 
 export const THEME_OPTIONS: Theme[] = ["system", "light", "dark"];
 
@@ -74,7 +75,7 @@ export const getStoredTheme = (): Theme => {
   } catch {
     // ignore
   }
-  return "system";
+  return INITIAL_THEME;
 };
 
 /** Apply the persisted theme from AppSettings (the source of truth). */
@@ -82,7 +83,7 @@ export const syncThemeFromSettings = async (): Promise<void> => {
   try {
     const result = await commands.getAppSettings();
     if (result.status === "ok") {
-      applyTheme(result.data.theme ?? "system");
+      applyTheme(result.data.theme ?? INITIAL_THEME);
     }
   } catch (e) {
     console.warn("Failed to sync theme from settings:", e);
