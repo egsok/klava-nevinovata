@@ -32,6 +32,7 @@ import {
   ROLE_KEYS as PICK_ROLE_KEYS,
 } from "../../shared/modelTable/ModelTableRow";
 import { formatModelSize } from "@/lib/utils/format";
+import { dictationModelDescription } from "@/lib/utils/modelTranslation";
 import { OnboardingShell, ScreenHeader, ScreenMain } from "../OnboardingShell";
 import { useOnboardingStore } from "../onboardingStore";
 import { useDownloadWords } from "../DownloadStatus";
@@ -301,9 +302,10 @@ export const Model: React.FC<ModelProps> = ({
           {/* With two rows of grades, the download takes this line's room. */}
           {!(dense && showsDownload(id)) && (
             <span {...vt(id, "d")} className="mt-[2px] text-ink-2">
-              {role === "extra"
-                ? row.model.description
-                : t(`onboarding.model.lines.${ROLE_KEYS[role]}`)}
+              {dictationModelDescription(id, t) ??
+                (role === "extra"
+                  ? row.model.description
+                  : t(`onboarding.model.lines.${ROLE_KEYS[role]}`))}
             </span>
           )}
           <span className="mt-[10px] grid grid-cols-[84px_1fr] items-center gap-x-[12px] gap-y-[8px] self-stretch">

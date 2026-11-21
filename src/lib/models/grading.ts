@@ -10,6 +10,7 @@ import {
   gradeFor,
   gradeForError,
   type Grade,
+  type GradedModel,
   type PickRole,
 } from "./catalog";
 
@@ -20,13 +21,13 @@ import {
 export interface Grading {
   langs: string[];
   tier: MachineTier;
-  roleOf: (m: CatalogModel | undefined) => PickRole | null;
-  grade: (m: CatalogModel | undefined, language: string) => Grade;
+  roleOf: (m: GradedModel | undefined) => PickRole | null;
+  grade: (m: GradedModel | undefined, language: string) => Grade;
   /** One grade over all your languages; "—" when it misses one. */
-  overall: (m: CatalogModel | undefined) => Grade;
-  wait: (m: CatalogModel | undefined) => number | undefined;
+  overall: (m: GradedModel | undefined) => Grade;
+  wait: (m: GradedModel | undefined) => number | undefined;
   /** Your languages it doesn't hear. */
-  missing: (m: CatalogModel | undefined) => string[];
+  missing: (m: GradedModel | undefined) => string[];
 }
 
 const UNGRADED: Grade = { letter: "none", label: "?" };
@@ -37,7 +38,7 @@ export const makeGrading = (
   picks: { model: CatalogModel; role: PickRole }[],
 ): Grading => {
   const roles = new Map(picks.map((p) => [p.model.id, p.role]));
-  const missing = (m: CatalogModel | undefined) =>
+  const missing = (m: GradedModel | undefined) =>
     m ? langs.filter((l) => !modelMatchesLanguage(m, l)) : [];
   return {
     langs,
@@ -47,17 +48,23 @@ export const makeGrading = (
     overall: (m) => {
       if (!m) return UNGRADED;
       if (missing(m).length) return { letter: "none", label: "—" };
+      const grades = langs.map((l) => gradeFor(m, l));
+      if (grades.length && grades.every((g) => g.label === grades[0].label))
+        return grades[0];
       const error = averageError(m, langs);
       return error == null ? UNGRADED : gradeForError(error);
     },
-    wait: (m) => (m ? catalog.modelWaitSeconds(m, tier) : undefined),
+    wait: (m) => {
+      const entry = m && catalog.getModel(m.id);
+      return entry && catalog.modelWaitSeconds(entry, tier);
+    },
     missing,
   };
 };
 
 /** The average error over these languages, when every one is measured. */
 export const averageError = (
-  m: CatalogModel,
+  m: GradedModel,
   langs: string[],
 ): number | null => {
   const errors = langs.map((l) => errorFor(m, l));

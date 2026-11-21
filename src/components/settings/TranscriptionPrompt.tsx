@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "../../hooks/useSettings";
 import { useModelStore } from "../../stores/modelStore";
+import ruEnV3 from "@/lib/constants/transcription-prompt-v3.txt?raw";
 import { SettingContainer } from "../ui/SettingContainer";
 import { Textarea } from "../ui/Textarea";
 import { Dropdown } from "../ui/Dropdown";
@@ -43,7 +44,7 @@ const PRESETS: Record<string, string> = {
   italian: `Ciao! Come stai? Ha detto: "Facciamolo oggi — finché abbiamo tempo." Non è così semplice.`,
   russian_v1: `Привет! Как дела? Он сказал: «Сделаем это сегодня — пока есть время». Конечно, не всё так просто, как кажется на первый взгляд; нужно принять во внимание погоду.`,
   ru_en_v2: `Привет! Как дела? Наш English-speaking friend сказал: «Сделаем это сегодня — пока есть время». Мы выполняли эту разработку в Claude Code. Конечно, не всё так просто; нужно учесть погоду.`,
-  ru_en_v3: `Bilingual Russian-English speech transcription. Russian text with embedded English IT terms. Preserve English in Latin: Claude Code, GitHub, feature branch, CI/CD pipeline, deployment.`,
+  ru_en_v3: ruEnV3.trim(),
   ru_en_v4: `This is a recording where a bilingual speaker uses Russian and English. English words and terms are preserved in Latin script. Example: «Мы задеплоили feature в production через CI/CD pipeline, используя для этого Claude Code».`,
   japanese: `こんにちは！元気ですか？「今日やりましょう。」もちろん、簡単ではない。`,
   chinese_simplified: `你好！你怎么样？他说："今天就做吧。"当然，事情没那么简单。`,

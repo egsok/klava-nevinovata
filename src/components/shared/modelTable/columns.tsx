@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import type { CatalogModel } from "@handy-computer/models";
+import type { GradedModel } from "@/lib/models/catalog";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { GradeChip } from "@/components/shared/GradeChip";
 import { SpeedBars, speedLevel } from "@/components/shared/SpeedBars";
@@ -77,7 +77,7 @@ export const Codes: React.FC<{ langs: string[]; vt?: VtName }> = ({
 /** Tooltip for a grade chip: what the letter means, or why there's no grade. */
 export const GradeTip: React.FC<{
   grading: Grading;
-  model: CatalogModel | undefined;
+  model: GradedModel | undefined;
   /** The languages the chip grades: one, or all of yours. */
   langs: string[];
   children: React.ReactElement;
@@ -91,12 +91,13 @@ export const GradeTip: React.FC<{
   const grade = one ? grading.grade(model, langs[0]) : grading.overall(model);
   const key = (k: string) => `modelTable.rubric.${k}`;
   const miss = langs.filter((l) => grading.grade(model, l).unsupported);
+  const editorial = langs.filter((l) => grading.grade(model, l).editorial);
   let text: React.ReactNode;
   if (!model) text = t(key("unrated"), { language: list(langs) });
   else if (miss.length) text = t(key("unsupported"), { language: list(miss) });
   else if (grade.letter === "none")
     text = t(key("unrated"), { language: list(langs) });
-  else text = t(key(`meaning.${grade.letter}`));
+  else if (!one || !editorial.length) text = t(key(`meaning.${grade.letter}`));
   // Per-language breakdown as text (chip greys don't work on the tooltip);
   // letters and +/− in separate columns so they line up.
   const breakdown = !one && (
@@ -128,6 +129,11 @@ export const GradeTip: React.FC<{
       text={
         <>
           {text}
+          {editorial.length > 0 && (
+            <span className="block">
+              {t(key("editorialGrade"), { languages: list(editorial) })}
+            </span>
+          )}
           {breakdown}
         </>
       }
@@ -151,7 +157,7 @@ export const useSpeedWords = () => {
 /** Tooltip for the speed bars, shaped like the grade hint. */
 export const SpeedTip: React.FC<{
   grading: Grading;
-  model: CatalogModel | undefined;
+  model: GradedModel | undefined;
   /** It previews your words while you talk. */
   streaming: boolean;
   className?: string;
@@ -187,7 +193,7 @@ export const SpeedTip: React.FC<{
 /** A row's grade, speed and size cells. */
 export const Values: React.FC<{
   grading: Grading;
-  model: CatalogModel | undefined;
+  model: GradedModel | undefined;
   streaming: boolean;
   sizeMb: number;
   vt?: VtName;

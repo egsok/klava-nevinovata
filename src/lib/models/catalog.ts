@@ -13,17 +13,29 @@ import {
 import type { GradeLetter } from "@/components/shared/GradeChip";
 
 export type { CatalogModel, MachineTier };
+export type GradedModel = Pick<CatalogModel, "id" | "languages" | "family">;
 
 const M = catalog.methodology;
+export const BREEZE = "Breeze-ASR-25";
+export const TURBO = "whisper-large-v3-turbo";
+
+// Keep upstream benchmark results intact. The fork also supports Russian
+// dictation with Breeze, including mixed Russian and English speech.
+export const ASR_MODELS = catalog.models
+  .filter((m) => m.role === "asr")
+  .map((m) =>
+    m.id === BREEZE && !m.languages.includes("ru")
+      ? { ...m, languages: [...m.languages, "ru"] }
+      : m,
+  );
+export const ASR_BY_REPO = new Map(ASR_MODELS.map((m) => [m.repository, m]));
 
 /** Curated speech models. */
-export const CURATED_ASR: CatalogModel[] = catalog.curatedModels.filter(
-  (m) => m.role === "asr",
-);
+export const CURATED_ASR = ASR_MODELS.filter((m) => m.curated);
 
 /** Measured word (or character) error for one language, in percent. */
 export const errorFor = (
-  model: CatalogModel,
+  model: GradedModel,
   language: string,
 ): number | undefined =>
   catalog.data.results[model.id]?.accuracy[languageIdentity(language)]?.error;
@@ -33,6 +45,7 @@ export interface Grade {
   /** "A+", "B−"; "—" when the model doesn't speak it, "?" when unmeasured. */
   label: string;
   unsupported?: boolean;
+  editorial?: boolean;
 }
 
 /**
@@ -44,12 +57,18 @@ export const GRADE_CEILINGS = { A: 5, B: 10, C: 20, D: 30 } as const;
 // The package writes the minus as a hyphen; the design sets a real minus.
 const minus = (label: string) => label.replace("-", "−");
 
-export const gradeFor = (model: CatalogModel, language: string): Grade => {
+export const gradeFor = (model: GradedModel, language: string): Grade => {
   if (!modelMatchesLanguage(model, language))
     return { letter: "none", label: "—", unsupported: true };
-  const grade = catalog.languageAccuracyGrade(model, language);
-  if (!grade) return { letter: "none", label: "?" };
-  return { letter: grade.letter, label: minus(grade.label) };
+  const lang = languageIdentity(language);
+  if (
+    ((model.id === BREEZE || model.id === "breeze-asr") &&
+      (lang === "ru" || lang === "en")) ||
+    ((model.id === TURBO || model.id === "turbo") && lang === "ru")
+  )
+    return { letter: "A", label: "A−", editorial: true };
+  const error = errorFor(model, language);
+  return error == null ? { letter: "none", label: "?" } : gradeForError(error);
 };
 
 /** The grade for an error in percent (an average over several languages). */
@@ -97,8 +116,15 @@ const PACKAGE_ROLES = [
 export const picksFor = (
   languages: string[],
   offered: (model: CatalogModel) => boolean,
-): ModelPick[] =>
-  catalog
+): ModelPick[] => {
+  // The fork's dictation assessment has no measured error rate to compare
+  // against other models, so don't advertise a "more accurate" alternative.
+  const langs = languages.map(languageIdentity);
+  if (langs.includes("ru") && langs.every((l) => l === "ru" || l === "en")) {
+    const breeze = CURATED_ASR.find((m) => m.id === BREEZE);
+    if (breeze && offered(breeze)) return [{ model: breeze, role: "pick" }];
+  }
+  return catalog
     .recommend(languages)
     .filter((r) => offered(r.model))
     .map((r) => {
@@ -107,6 +133,7 @@ export const picksFor = (
     })
     .filter((p): p is ModelPick => p !== null)
     .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
+};
 
 /** Usable models for these languages, ordered by the package's overall cost on this tier. */
 const rankFor = (

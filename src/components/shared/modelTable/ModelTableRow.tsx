@@ -120,7 +120,7 @@ export const ModelTableRow: React.FC<ModelTableRowProps> = ({
       )
     ) : entry.kind === "custom" ? (
       t("modelTable.customLine")
-    ) : entry.kind === "legacy" ? (
+    ) : entry.kind === "legacy" && !entry.model ? (
       t("modelTable.legacyLine")
     ) : (
       entry.description

@@ -965,6 +965,8 @@ fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
 }
 
 pub const SETTINGS_STORE_PATH: &str = "settings_store.json";
+const TRANSCRIPTION_PROMPT_V3: &str =
+    include_str!("../../src/lib/constants/transcription-prompt-v3.txt");
 
 pub fn get_default_settings() -> AppSettings {
     #[cfg(target_os = "windows")]
@@ -1086,7 +1088,7 @@ pub fn get_default_settings() -> AppSettings {
         language_detection: LanguageDetectionMode::default(),
         language_detection_window_secs: default_language_detection_window_secs(),
         overlay_style: default_overlay_style(),
-        transcription_prompt: None,
+        transcription_prompt: Some(TRANSCRIPTION_PROMPT_V3.trim().to_owned()),
     }
 }
 
@@ -1264,9 +1266,14 @@ fn salvage_settings(stored: &serde_json::Value) -> AppSettings {
         warn!("Stored settings are not a JSON object; falling back to defaults");
         return get_default_settings();
     };
+    // An existing store without a prompt predates the preset for new installs.
+    let defaults = AppSettings {
+        transcription_prompt: None,
+        ..get_default_settings()
+    };
 
-    let mut merged = serde_json::to_value(get_default_settings())
-        .expect("default settings serialize to a JSON object");
+    let mut merged =
+        serde_json::to_value(&defaults).expect("default settings serialize to a JSON object");
 
     for (key, value) in stored_map {
         let previous = merged
@@ -1288,7 +1295,7 @@ fn salvage_settings(stored: &serde_json::Value) -> AppSettings {
 
     serde_json::from_value(merged).unwrap_or_else(|e| {
         warn!("Failed to reassemble salvaged settings ({e}); falling back to defaults");
-        get_default_settings()
+        defaults
     })
 }
 
@@ -1616,6 +1623,27 @@ mod tests {
         drop(guard);
         reader.join().unwrap();
         assert_eq!(result.unwrap(), expected);
+    }
+
+    #[test]
+    fn new_install_prompt_does_not_override_existing_profiles() {
+        assert_eq!(
+            get_default_settings().transcription_prompt.as_deref(),
+            Some(TRANSCRIPTION_PROMPT_V3.trim())
+        );
+        for stored in [
+            serde_json::json!({}),
+            serde_json::json!({"transcription_prompt": null}),
+            serde_json::json!({"transcription_prompt": "my own prompt"}),
+        ] {
+            let expected = stored["transcription_prompt"].as_str();
+            let loaded: AppSettings = serde_json::from_value(stored.clone()).unwrap();
+            assert_eq!(loaded.transcription_prompt.as_deref(), expected);
+            assert_eq!(
+                salvage_settings(&stored).transcription_prompt.as_deref(),
+                expected
+            );
+        }
     }
 
     #[test]

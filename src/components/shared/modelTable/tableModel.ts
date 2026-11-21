@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { catalog } from "@handy-computer/models";
+import { ASR_BY_REPO } from "@/lib/models/catalog";
 import type { ModelInfo } from "@/bindings";
 import { repoIdOf } from "@/lib/models/retired";
 import {
@@ -20,16 +20,10 @@ const quantOf = (filename: string): string | null => {
   return match ? match[1].toUpperCase() : null;
 };
 
-const CATALOG_BY_REPO = new Map(
-  catalog.models
-    .filter((m) => m.role === "asr")
-    .map((m) => [m.repository, m] as const),
-);
-
 /** An app model as the table shows it, joined to its catalog entry by repo. */
 export const toTableModel = (info: ModelInfo, t: TFunction): TableModel => {
   const repo = repoIdOf(info);
-  const model = info.is_custom || !repo ? undefined : CATALOG_BY_REPO.get(repo);
+  const model = info.is_custom || !repo ? undefined : ASR_BY_REPO.get(repo);
   return {
     id: info.id,
     name: getTranslatedModelName(info, t),
@@ -47,6 +41,16 @@ export const toTableModel = (info: ModelInfo, t: TFunction): TableModel => {
         : model?.curated
           ? "curated"
           : "catalog",
-    model,
+    model:
+      model ??
+      (!info.is_custom &&
+      isLegacyModel(info) &&
+      (info.id === "breeze-asr" || info.id === "turbo")
+        ? {
+            id: info.id,
+            languages: info.supported_languages,
+            family: "whisper",
+          }
+        : undefined),
   };
 };

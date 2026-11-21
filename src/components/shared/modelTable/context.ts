@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { CatalogModel } from "@handy-computer/models";
+import type { GradedModel } from "@/lib/models/catalog";
 import type { Grading } from "@/lib/models/grading";
 
 /** Curated (onboarding offers it), catalog (untested), custom or legacy. */
@@ -16,8 +16,8 @@ export interface TableModel {
   sizeMb: number;
   quant: string | null;
   kind: ModelKind;
-  /** Its catalog entry, which grades it; none for custom and legacy. */
-  model?: CatalogModel;
+  /** Catalog or legacy identity for language grading, when known. */
+  model?: GradedModel;
 }
 
 interface TableContext {

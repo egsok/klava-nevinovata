@@ -22,6 +22,10 @@
     "about": "About"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Originally optimized for Taiwanese Mandarin. Works very well for Russian dictation with English words and phrases.",
+      "turbo": "For mixed Russian and English speech, use the V3 — Ru-En transcription prompt to get accuracy comparable to Breeze-ASR-25."
+    },
     "customModelDescription": "Not officially supported",
     "migration": {
       "title": "Your models need an update",
@@ -238,6 +242,7 @@
       "translateTitle": "Can turn what you say into English text. Turn it on in settings"
     },
     "rubric": {
+      "editorialGrade": "The grade for {{languages}} reflects our experience with mixed Russian and English dictation. It has no corresponding measured error percentage.",
       "gradeTitle": "{{language}} accuracy: {{grade}}",
       "accuracyTitle": "{{language}} accuracy",
       "overallTitle": "Accuracy in your languages: {{grade}}",
@@ -425,6 +430,7 @@
       "deleteModel": "Delete {{name}}",
       "cancelDownload": "Stop downloading {{name}}",
       "legend": {
+        "measuredAndEditorial": "The percentages below apply to benchmark grades. For mixed dictation, the fork assigns A− to Breeze in Russian and English and to Whisper Turbo in Russian based on practical use.",
         "open": "How models are graded",
         "accuracyNote": "For each of your languages: how many words a model got wrong in our test recordings.",
         "speedNote": {

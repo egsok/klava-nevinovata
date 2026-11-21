@@ -305,12 +305,17 @@ impl From<&CatalogModel> for ModelDescriptor {
 /// stays out of [`ModelDescriptor`] (mirrors, results) can
 /// be looked up separately.
 static ROOT: Lazy<CatalogRoot> = Lazy::new(|| {
-    let root: CatalogRoot = serde_json::from_str(include_str!("catalog.json"))
+    let mut root: CatalogRoot = serde_json::from_str(include_str!("catalog.json"))
         .expect("bundled catalog.json is valid JSON matching the catalog schema");
     assert_eq!(
         root.schema, SCHEMA,
         "bundled catalog.json has an unsupported schema"
     );
+    if let Some(breeze) = root.models.iter_mut().find(|m| m.id == "Breeze-ASR-25") {
+        if !breeze.languages.iter().any(|l| l == "ru") {
+            breeze.languages.push("ru".to_string());
+        }
+    }
     root
 });
 

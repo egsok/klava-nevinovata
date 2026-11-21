@@ -1,0 +1,1 @@
+Bilingual Russian-English speech transcription. Russian text with embedded English IT terms. Preserve English in Latin: Claude Code, GitHub, feature branch, CI/CD pipeline, deployment.

@@ -33,11 +33,10 @@ jobs:
             const fs = require('node:fs');
             const version = '${{ steps.get-version.outputs.version }}';
             const notes = fs.readFileSync(`RELEASE-NOTES-v${version}.md`, 'utf8');
-            // Every release ends with the same "which file to download" guide,
-            // so per-version notes only describe what changed.
+            // Put installer links first on every release page.
             const guide = fs.readFileSync('.github/release-download-guide.md', 'utf8')
               .replaceAll('{{VERSION}}', version);
-            const body = `${notes.trimEnd()}\n\n${guide}`;
+            const body = `${guide.trimEnd()}\n\n---\n\n${notes.trim()}\n`;
             // A failed build leaves its draft behind. Resume it without moving the tag.
             const releases = await github.paginate(github.rest.repos.listReleases, {
               owner: context.repo.owner,
@@ -109,15 +108,6 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Prepend Download link to release notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          BODY="$(gh release view "v${{ needs.create-release.outputs.version }}" --json body -q .body --repo "${{ github.repository }}")"
-          gh release edit "v${{ needs.create-release.outputs.version }}" \
-            --notes "$(printf 'See [Installation instructions](https://github.com/${{ github.repository }}#download) in README.\n\n%s' "$BODY")" \
-            --repo "${{ github.repository }}"
-
       - name: Flip draft to false
         env:
           GH_TOKEN: ${{ github.token }}

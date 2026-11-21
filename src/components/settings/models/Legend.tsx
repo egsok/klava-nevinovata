@@ -43,7 +43,7 @@ export const Legend: React.FC<{ tier: "accelerated" | "cpu" }> = ({ tier }) => {
         >
           <p className="font-semibold text-text">{t("modelTable.accuracy")}</p>
           <p className="mt-[2px] text-ink-2">
-            {t("settings.models.legend.accuracyNote")}
+            {t("settings.models.legend.measuredAndEditorial")}
           </p>
           <ul className="mt-[8px] grid grid-cols-[auto_1fr_auto_1fr] items-center gap-x-[8px] gap-y-[5px]">
             {LETTERS.map((l) => (

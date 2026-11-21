@@ -35,17 +35,22 @@ interface ReleaseNoteParts {
 // after the shared note when there is one.
 const releaseNotePartsByVersion = new Map<string, ReleaseNoteParts>();
 
-const parseVersion = (version: string): [number, number, number] | null => {
+const parseVersion = (version: string): number[] | null => {
   const normalized = version.trim().replace(/^v/i, "");
-  const match = normalized.match(/^(\d+)\.(\d+)\.(\d+)/);
+  const match = normalized.match(/^(\d+)\.(\d+)\.(\d+)(?:-(\d+))?$/);
   if (!match) return null;
 
-  return [Number(match[1]), Number(match[2]), Number(match[3])];
+  return [
+    Number(match[1]),
+    Number(match[2]),
+    Number(match[3]),
+    Number(match[4] ?? 0),
+  ];
 };
 
 for (const [path, markdown] of Object.entries(releaseNoteModules)) {
   const match = path.match(
-    /release-notes\/(\d+\.\d+\.\d+)(?:\.(linux|macos|windows))?\.md$/,
+    /release-notes\/(\d+\.\d+\.\d+(?:-\d+)?)(?:\.(linux|macos|windows))?\.md$/,
   );
   if (!match) continue;
 

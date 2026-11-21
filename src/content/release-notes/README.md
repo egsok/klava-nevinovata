@@ -4,6 +4,7 @@ Add user-facing release notes as Markdown files named by app version:
 
 ```text
 src/content/release-notes/0.8.4.md
+src/content/release-notes/0.10.1-3.md
 ```
 
 To show a note on one platform only, add the platform after the version, for

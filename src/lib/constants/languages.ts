@@ -2,7 +2,8 @@
  * Spoken languages from the model catalog. Codes are `languageIdentity`s,
  * one spelling per language (no/nb → nb), compared and saved as is.
  */
-import { catalog, languageIdentity } from "@handy-computer/models";
+import { languageIdentity } from "@handy-computer/models";
+import { ASR_MODELS } from "@/lib/models/catalog";
 
 /** `native` is the endonym, never translated. UI names: `languageName`. */
 export interface Language {
@@ -46,7 +47,7 @@ const endonym = (code: string): string => {
 
 // How many of the catalog's speech models hear each language.
 const SUPPORT = new Map<string, number>();
-for (const model of catalog.models.filter((m) => m.role === "asr"))
+for (const model of ASR_MODELS)
   for (const code of new Set(model.languages.map(languageIdentity)))
     SUPPORT.set(code, (SUPPORT.get(code) ?? 0) + 1);
 
