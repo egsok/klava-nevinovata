@@ -154,6 +154,7 @@ const DemoLaptop: React.FC<{
   shortcut: string;
   keyDown: boolean;
   mode: Mode;
+  context: string;
   text: string;
   landed: boolean;
   landKey: number;
@@ -171,6 +172,7 @@ const DemoLaptop: React.FC<{
   shortcut,
   keyDown,
   mode,
+  context,
   text,
   landed,
   landKey,
@@ -245,10 +247,12 @@ const DemoLaptop: React.FC<{
             />
             <div className="demo-app-body">
               {mode === "hold" ? (
-                <p className="demo-them">{t("onboarding.demo.chat")}</p>
+                <p className="demo-them" lang={lang} dir="auto">
+                  {context}
+                </p>
               ) : (
-                <p className="demo-note-title">
-                  {t("onboarding.demo.noteTitle")}
+                <p className="demo-note-title" lang={lang} dir="auto">
+                  {context}
                 </p>
               )}
               <div ref={fieldRef} className="demo-field">
@@ -382,14 +386,20 @@ export const Demo: React.FC<DemoProps> = ({
   onBack,
   onContinue,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { getSetting } = useSettings();
-  const { languages, script, preview } = useOnboardingStore();
+  const { script, preview } = useOnboardingStore();
   const binding = getSetting("bindings")?.transcribe;
   const shortcut = binding?.current_binding ?? "";
   const [still] = useState(prefersReducedMotion);
 
   const [chapter, setChapter] = useState<Mode>("hold");
+  const sample = demoLine(
+    i18n.resolvedLanguage ?? i18n.language,
+    script,
+    chapter,
+    t,
+  );
   const [phrase, setPhrase] = useState<Phrase>(0);
   const [pointer, setPointer] = useState<Pointer>("rest");
   const [clickKey, setClickKey] = useState(0);
@@ -397,8 +407,7 @@ export const Demo: React.FC<DemoProps> = ({
   const [keyDown, setKeyDown] = useState(false);
   const [pillState, setPillState] = useState<PillState>("hidden");
   const [text, setText] = useState({
-    value: "",
-    lang: "en",
+    visible: false,
     landed: false,
     key: 0,
   });
@@ -414,47 +423,42 @@ export const Demo: React.FC<DemoProps> = ({
   const later = (fn: () => void, ms: number) =>
     timers.current.push(setTimeout(fn, ms));
 
-  const apply = useCallback(
-    (mode: Mode, beat: Beat, animate = true) => {
-      if (beat === "reset") {
-        setChapter(mode);
-        setPhrase(0);
-        setText((x) => ({ ...x, value: "", landed: false }));
-        setPillState("hidden");
-        setKeyDown(false);
-        setPointer("rest");
-        setFocused(false);
-      } else if (beat === "point") {
-        setPointer("field");
-      } else if (beat === "click") {
-        setPointer("field");
-        setFocused(true);
-        if (animate) setClickKey((k) => k + 1);
-      } else if (beat === "press") {
-        setKeyDown(true);
-        // Hide while listening; the still frame keeps it to show the click.
-        setPointer(animate ? "gone" : "field");
-        setPillState((p) => (p === "hidden" ? "rec" : p));
-        setPhrase(1);
-      } else if (beat === "lift") {
-        setKeyDown(false);
-      } else if (beat === "release") {
-        setKeyDown(false);
-        setPillState("work");
-        setPhrase(2);
-      } else {
-        const line = demoLine(languages, script, mode);
-        setPillState("hidden");
-        setText((x) => ({
-          value: line.text,
-          lang: line.language,
-          landed: animate,
-          key: x.key + 1,
-        }));
-      }
-    },
-    [languages, script],
-  );
+  const apply = useCallback((mode: Mode, beat: Beat, animate = true) => {
+    if (beat === "reset") {
+      setChapter(mode);
+      setPhrase(0);
+      setText((x) => ({ ...x, visible: false, landed: false }));
+      setPillState("hidden");
+      setKeyDown(false);
+      setPointer("rest");
+      setFocused(false);
+    } else if (beat === "point") {
+      setPointer("field");
+    } else if (beat === "click") {
+      setPointer("field");
+      setFocused(true);
+      if (animate) setClickKey((k) => k + 1);
+    } else if (beat === "press") {
+      setKeyDown(true);
+      // Hide while listening; the still frame keeps it to show the click.
+      setPointer(animate ? "gone" : "field");
+      setPillState((p) => (p === "hidden" ? "rec" : p));
+      setPhrase(1);
+    } else if (beat === "lift") {
+      setKeyDown(false);
+    } else if (beat === "release") {
+      setKeyDown(false);
+      setPillState("work");
+      setPhrase(2);
+    } else {
+      setPillState("hidden");
+      setText((x) => ({
+        visible: true,
+        landed: animate,
+        key: x.key + 1,
+      }));
+    }
+  }, []);
 
   const play = useCallback(
     (mode: Mode = nextMode.current) => {
@@ -540,10 +544,11 @@ export const Demo: React.FC<DemoProps> = ({
           shortcut={shortcut}
           keyDown={keyDown}
           mode={chapter}
-          text={text.value}
+          context={sample.context}
+          text={text.visible ? sample.text : ""}
           landed={text.landed}
           landKey={text.key}
-          lang={text.lang}
+          lang={sample.language}
           pill={pillState}
           still={still}
           dimmed={capture.capturing}

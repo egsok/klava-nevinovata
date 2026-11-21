@@ -22,6 +22,10 @@
     "about": "Hakkında"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Model başlangıçta Tayvan Mandarini için optimize edildi. İngilizce sözcük ve ifadeler içeren Rusça konuşmaları çok iyi tanır.",
+      "turbo": "Rusça ve İngilizceyi bir arada kullanırken tanıma dili olarak Rusçayı seçin ve V3 — Ru-En transkripsiyon istemini kullanın. Böylece Breeze-ASR-25 ile karşılaştırılabilir bir doğruluk elde edersiniz."
+    },
     "customModelDescription": "Resmi olarak desteklenmiyor",
     "migration": {
       "title": "Modellerinizin güncellenmesi gerekiyor",
@@ -238,6 +242,8 @@
       "translateTitle": "Söylediklerinizi İngilizce metne çevirebilir. Ayarlardan açın"
     },
     "rubric": {
+      "speedHardware": "Hız donanımınıza bağlıdır. Uyumlu bir GPU veya Apple M serisi çipli bir Mac ile transkripsiyon hızlı olabilir.",
+      "editorialGrade": "{{languages}} · Geliştiricinin Rusça ve İngilizceyi bir arada kullanarak yaptığı dikte denemelerine dayanan değerlendirmesi.",
       "gradeTitle": "{{language}} doğruluğu: {{grade}}",
       "accuracyTitle": "{{language}} doğruluğu",
       "overallTitle": "Dillerinizdeki doğruluk: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "{{name}} modelini sil",
       "cancelDownload": "{{name}} indirmesini durdur",
       "legend": {
+        "measuredAndEditorial": "Aşağıdaki yüzdeler test kayıtlarından elde edilmiştir. Geliştirici, karma dikte deneyimine dayanarak her iki Breeze modeline Rusça ve İngilizce için, Whisper Turbo’ya ise Rusça için A− vermiştir.",
         "open": "Modeller nasıl derecelendirilir",
         "accuracyNote": "Dillerinizin her biri için: bir modelin test kayıtlarımızda kaç sözcüğü yanlış anladığı.",
         "speedNote": {

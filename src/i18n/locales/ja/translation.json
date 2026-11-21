@@ -22,6 +22,10 @@
     "about": "概要"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "もともとは台湾華語向けに最適化されたモデルです。英単語や英語のフレーズが混ざるロシア語も高い精度で認識します。",
+      "turbo": "ロシア語と英語が混ざる場合は、認識言語をロシア語に設定し、文字起こしプロンプト「V3 — Ru-En」を選んでください。Breeze-ASR-25 と同程度の精度が得られます。"
+    },
     "customModelDescription": "公式サポート対象外",
     "migration": {
       "title": "モデルの更新が必要です",
@@ -238,6 +242,8 @@
       "translateTitle": "話した内容を英語のテキストに変換できます。設定でオンにします"
     },
     "rubric": {
+      "speedHardware": "処理速度は機器によって異なります。対応する GPU や Apple の M シリーズチップを搭載した Mac では、高速に文字起こしできる場合があります。",
+      "editorialGrade": "{{languages}} · ロシア語と英語を交えた音声入力での使用経験に基づく開発者の評価です。",
       "gradeTitle": "{{language}}の精度: {{grade}}",
       "accuracyTitle": "{{language}}の精度",
       "overallTitle": "選んだ言語での精度: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "{{name}} を削除",
       "cancelDownload": "{{name}} のダウンロードを中止",
       "legend": {
+        "measuredAndEditorial": "以下のパーセンテージはテスト音声での測定値です。開発者は混在音声での使用経験から、Breeze の両モデルのロシア語・英語と、Whisper Turbo のロシア語を A− と評価しています。",
         "open": "モデルの評価方法",
         "accuracyNote": "選んだ言語ごとに、テスト用の録音でモデルが間違えた単語の割合です。",
         "speedNote": {

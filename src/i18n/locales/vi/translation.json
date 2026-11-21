@@ -22,6 +22,10 @@
     "about": "Giới thiệu"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Ban đầu mô hình được tối ưu cho tiếng Quan thoại Đài Loan. Mô hình nhận dạng rất tốt lời nói tiếng Nga có xen từ và cụm từ tiếng Anh.",
+      "turbo": "Khi đọc xen kẽ tiếng Nga và tiếng Anh, hãy chọn tiếng Nga làm ngôn ngữ nhận dạng và dùng lời nhắc phiên âm V3 — Ru-En. Khi đó, độ chính xác tương đương với Breeze-ASR-25."
+    },
     "customModelDescription": "Không được hỗ trợ chính thức",
     "migration": {
       "title": "Các mô hình của bạn cần được cập nhật",
@@ -238,6 +242,8 @@
       "translateTitle": "Có thể chuyển lời bạn nói thành văn bản tiếng Anh. Bật trong cài đặt"
     },
     "rubric": {
+      "speedHardware": "Tốc độ phụ thuộc vào phần cứng. Quá trình chuyển giọng nói thành văn bản có thể diễn ra nhanh trên GPU tương thích hoặc máy Mac dùng chip Apple dòng M.",
+      "editorialGrade": "{{languages}} · Đánh giá của tác giả dựa trên kinh nghiệm đọc xen kẽ tiếng Nga và tiếng Anh.",
       "gradeTitle": "Độ chính xác {{language}}: {{grade}}",
       "accuracyTitle": "Độ chính xác {{language}}",
       "overallTitle": "Độ chính xác cho các ngôn ngữ của bạn: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Xóa {{name}}",
       "cancelDownload": "Dừng tải xuống {{name}}",
       "legend": {
+        "measuredAndEditorial": "Các tỷ lệ phần trăm bên dưới được đo trên bản ghi thử nghiệm. Dựa trên kinh nghiệm đọc xen kẽ hai ngôn ngữ, tác giả chấm A− cho cả hai mô hình Breeze với tiếng Nga và tiếng Anh, và cho Whisper Turbo với tiếng Nga.",
         "open": "Cách xếp hạng mô hình",
         "accuracyNote": "Với mỗi ngôn ngữ của bạn: số từ mô hình nhận sai trong các bản ghi âm kiểm thử của chúng tôi.",
         "speedNote": {

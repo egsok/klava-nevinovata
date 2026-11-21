@@ -22,6 +22,10 @@
     "about": "Over"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Het model is oorspronkelijk geoptimaliseerd voor Taiwanees Mandarijn. Het herkent Russische spraak met Engelse woorden en uitdrukkingen heel goed.",
+      "turbo": "Dicteer je afwisselend in het Russisch en Engels, kies dan Russisch als herkenningstaal en gebruik de transcriptieprompt V3 — Ru-En. De nauwkeurigheid is dan vergelijkbaar met die van Breeze-ASR-25."
+    },
     "customModelDescription": "Niet officieel ondersteund",
     "migration": {
       "title": "Je modellen moeten worden bijgewerkt",
@@ -238,6 +242,8 @@
       "translateTitle": "Kan wat je zegt omzetten in Engelse tekst. Zet dit aan in de instellingen"
     },
     "rubric": {
+      "speedHardware": "De snelheid hangt af van je hardware. Met een geschikte GPU of op een Mac met een chip uit de M-serie van Apple kan de transcriptie snel verlopen.",
+      "editorialGrade": "{{languages}} · Beoordeling van de ontwikkelaar op basis van ervaring met gemengd Russisch-Engels dicteren.",
       "gradeTitle": "Nauwkeurigheid {{language}}: {{grade}}",
       "accuracyTitle": "Nauwkeurigheid {{language}}",
       "overallTitle": "Nauwkeurigheid in jouw talen: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "{{name}} verwijderen",
       "cancelDownload": "Downloaden van {{name}} stoppen",
       "legend": {
+        "measuredAndEditorial": "De percentages hieronder komen uit de testopnamen. Op basis van ervaring met gemengd dicteren geeft de ontwikkelaar beide Breeze-modellen een A− voor Russisch en Engels, en Whisper Turbo een A− voor Russisch.",
         "open": "Hoe modellen worden beoordeeld",
         "accuracyNote": "Per taal van jou: hoeveel woorden een model fout had in onze testopnames.",
         "speedNote": {

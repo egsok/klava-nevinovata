@@ -23,10 +23,10 @@ export const isDense = (langs: string[]) =>
 /** The grade, speed and size columns: the same grid in heads and rows. */
 export const columnsClass = (langs: string[]) =>
   gradeMode(langs) === "overall"
-    ? "grid-cols-[44px_40px_52px] gap-x-[6px]"
+    ? "grid-cols-[44px_72px_58px] gap-x-[6px]"
     : isDense(langs)
-      ? "grid-cols-[repeat(var(--n),26px)_36px_50px] gap-x-[3px]"
-      : "grid-cols-[repeat(var(--n),32px)_40px_52px] gap-x-[6px]";
+      ? "grid-cols-[repeat(var(--n),26px)_72px_58px] gap-x-[3px]"
+      : "grid-cols-[repeat(var(--n),32px)_72px_58px] gap-x-[6px]";
 
 export const columnsStyle = (langs: string[]) =>
   ({ "--n": langs.length }) as React.CSSProperties;
@@ -68,8 +68,12 @@ export const Codes: React.FC<{ langs: string[]; vt?: VtName }> = ({
           {t("modelTable.allLanguages")}
         </span>
       )}
-      <span className={CODE_CLASS}>{t("modelTable.speed")}</span>
-      <span className={CODE_CLASS}>{t("modelTable.size")}</span>
+      <span className={`${CODE_CLASS} min-w-0 text-center wrap-anywhere`}>
+        {t("modelTable.speed")}
+      </span>
+      <span className={`${CODE_CLASS} min-w-0 text-center wrap-anywhere`}>
+        {t("modelTable.size")}
+      </span>
     </span>
   );
 };
@@ -176,13 +180,16 @@ export const SpeedTip: React.FC<{
           : t(key("speedTitle"), { speed: t(key(`speedName.${level}`)) })
       }
       text={
-        wait == null
-          ? t(key("untimed"))
-          : streaming
-            ? t(key("speedPreview"), {
-                meaning: t(key(`speedMeaning.${level}`)),
-              })
-            : t(key(`speedMeaning.${level}`))
+        <>
+          {wait == null
+            ? t(key("untimed"))
+            : streaming
+              ? t(key("speedPreview"), {
+                  meaning: t(key(`speedMeaning.${level}`)),
+                })
+              : t(key(`speedMeaning.${level}`))}
+          <span className="mt-1 block">{t(key("speedHardware"))}</span>
+        </>
       }
     >
       {children}

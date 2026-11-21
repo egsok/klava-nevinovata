@@ -22,6 +22,10 @@
     "about": "O aplikaci"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Model byl původně optimalizován pro tchajwanskou mandarínštinu. Velmi dobře rozpoznává ruštinu prokládanou anglickými slovy a frázemi.",
+      "turbo": "Při střídání ruštiny a angličtiny zvolte jako jazyk rozpoznávání ruštinu a použijte pokyn V3 — Ru-En. Přesnost je pak srovnatelná s modelem Breeze-ASR-25."
+    },
     "customModelDescription": "Oficiálně nepodporováno",
     "migration": {
       "title": "Vaše modely potřebují aktualizaci",
@@ -238,6 +242,8 @@
       "translateTitle": "Umí změnit to, co řeknete, na anglický text. Zapnete to v nastavení"
     },
     "rubric": {
+      "speedHardware": "Rychlost závisí na zařízení. S kompatibilní grafickou kartou nebo na Macu s čipem Apple řady M může být přepis rychlý.",
+      "editorialGrade": "{{languages}} · Hodnocení autora podle zkušeností s diktováním v ruštině střídající se s angličtinou.",
       "gradeTitle": "Přesnost pro {{language}}: {{grade}}",
       "accuracyTitle": "Přesnost pro {{language}}",
       "overallTitle": "Přesnost ve vašich jazycích: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Smazat {{name}}",
       "cancelDownload": "Zastavit stahování {{name}}",
       "legend": {
+        "measuredAndEditorial": "Procenta níže vycházejí z testovacích nahrávek. Na základě zkušeností se smíšeným diktováním dal autor oběma modelům Breeze známku A− pro ruštinu a angličtinu a modelu Whisper Turbo pro ruštinu.",
         "open": "Jak se modely hodnotí",
         "accuracyNote": "Pro každý z vašich jazyků: kolik slov model v našich testovacích nahrávkách napsal špatně.",
         "speedNote": {

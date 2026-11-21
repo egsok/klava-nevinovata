@@ -22,6 +22,10 @@
     "about": "Om"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Modellen optimerades ursprungligen för taiwanesisk mandarin. Den känner igen ryskt tal med engelska ord och uttryck mycket väl.",
+      "turbo": "När du dikterar på både ryska och engelska väljer du ryska som igenkänningsspråk och använder transkriptionsprompten V3 — Ru-En. Då blir träffsäkerheten jämförbar med Breeze-ASR-25."
+    },
     "customModelDescription": "Stöds inte officiellt",
     "migration": {
       "title": "Dina modeller behöver uppdateras",
@@ -238,6 +242,8 @@
       "translateTitle": "Kan göra om det du säger till engelsk text. Slå på det i inställningarna"
     },
     "rubric": {
+      "speedHardware": "Hastigheten beror på din hårdvara. Transkriberingen kan gå snabbt med en kompatibel grafikprocessor eller på en Mac med ett chip ur Apples M-serie.",
+      "editorialGrade": "{{languages}} · Utvecklarens bedömning utifrån erfarenhet av att diktera på ryska och engelska i samma yttrande.",
       "gradeTitle": "Noggrannhet för {{language}}: {{grade}}",
       "accuracyTitle": "Noggrannhet för {{language}}",
       "overallTitle": "Noggrannhet för dina språk: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Ta bort {{name}}",
       "cancelDownload": "Stoppa nedladdningen av {{name}}",
       "legend": {
+        "measuredAndEditorial": "Procentsatserna nedan gäller testinspelningarna. Utifrån erfarenhet av blandad diktering ger utvecklaren båda Breeze-modellerna A− för ryska och engelska och Whisper Turbo A− för ryska.",
         "open": "Så betygsätts modellerna",
         "accuracyNote": "För vart och ett av dina språk: hur många ord en modell fick fel i våra testinspelningar.",
         "speedNote": {

@@ -22,6 +22,10 @@
     "about": "O programie"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Model początkowo zoptymalizowano pod kątem tajwańskiej odmiany mandaryńskiego. Bardzo dobrze rozpoznaje rosyjską mowę z angielskimi słowami i zwrotami.",
+      "turbo": "Przy dyktowaniu na przemian po rosyjsku i angielsku wybierz rosyjski jako język rozpoznawania i użyj promptu transkrypcji V3 — Ru-En. Dokładność jest wtedy porównywalna z Breeze-ASR-25."
+    },
     "customModelDescription": "Nieoficjalnie wspierane",
     "migration": {
       "title": "Twoje modele wymagają aktualizacji",
@@ -238,6 +242,8 @@
       "translateTitle": "Potrafi zamienić to, co mówisz, na tekst angielski. Włącz to w ustawieniach"
     },
     "rubric": {
+      "speedHardware": "Szybkość zależy od sprzętu. Transkrypcja może być szybka na zgodnej karcie graficznej lub na Macu z układem Apple z serii M.",
+      "editorialGrade": "{{languages}} · Ocena autora oparta na doświadczeniu z dyktowaniem na przemian po rosyjsku i angielsku.",
       "gradeTitle": "Dokładność ({{language}}): {{grade}}",
       "accuracyTitle": "Dokładność ({{language}})",
       "overallTitle": "Dokładność w Twoich językach: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Usuń {{name}}",
       "cancelDownload": "Zatrzymaj pobieranie {{name}}",
       "legend": {
+        "measuredAndEditorial": "Wartości procentowe poniżej pochodzą z nagrań testowych. Na podstawie doświadczenia z dyktowaniem w obu językach autor przyznał obu modelom Breeze ocenę A− dla rosyjskiego i angielskiego, a Whisper Turbo dla rosyjskiego.",
         "open": "Jak oceniamy modele",
         "accuracyNote": "Dla każdego z Twoich języków: ile słów model pomylił w naszych nagraniach testowych.",
         "speedNote": {

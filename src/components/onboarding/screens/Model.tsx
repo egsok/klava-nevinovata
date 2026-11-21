@@ -347,6 +347,9 @@ export const Model: React.FC<ModelProps> = ({
               </span>
             </SpeedTip>
           </span>
+          <span className="mt-[5px] text-label text-ink-3">
+            {t("modelTable.rubric.speedHardware")}
+          </span>
         </span>
         {showsDownload(id) && fullLine()}
       </div>

@@ -13,6 +13,7 @@
   margin-top: 2px;
 }
 .try-screen {
+  --color-ink-2: var(--demo-caption);
   /* All set's panel: inset, width, and the room the note makes for it. */
   --try-panel-end: 12px;
   --try-panel-width: 310px;
@@ -257,7 +258,7 @@
 }
 /* Dimmed while Handy transcribes. */
 .try-say[data-dim] {
-  opacity: 0.45;
+  opacity: var(--demo-busy-opacity);
 }
 .try-say-main,
 .try-say-sub {
@@ -341,13 +342,11 @@
 
 /* ---------- the end: the move into All set (TryIt's stages) ---------- */
 
-/* Title and line cross-fade. The line keeps its one-line height with keys in
-   it, so the screen never jumps. */
+/* The title and subtitle cross-fade. Wrapped shortcuts stay in normal flow. */
 .try-swap {
   animation: try-say-fade 260ms ease both;
 }
 .try-main > p.try-swap {
-  height: 24px;
   line-height: 24px;
 }
 .try-sub-keys {
@@ -608,9 +607,18 @@ button.try-panel-row:focus-visible {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.try-panel-keys > .try-panel-row {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
 .try-panel-keybox {
   display: inline-flex;
+  max-width: 100%;
   margin-inline-start: auto;
+}
+.try-panel-keybox > [role="img"] {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 /* The shortcut row is one button so the keys keep their place; no hover
    while recording. */

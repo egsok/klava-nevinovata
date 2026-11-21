@@ -22,6 +22,10 @@
     "about": "Quant a"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "El model es va optimitzar originalment per al mandarí de Taiwan. Reconeix molt bé la parla russa amb paraules i expressions en anglès.",
+      "turbo": "Per dictar en rus i anglès alhora, trieu el rus com a llengua de reconeixement i feu servir la instrucció V3 — Ru-En. Així obtindreu una precisió comparable a la de Breeze-ASR-25."
+    },
     "customModelDescription": "Sense suport oficial",
     "migration": {
       "title": "Cal actualitzar els vostres models",
@@ -238,6 +242,8 @@
       "translateTitle": "Pot convertir el que digueu en text en anglès. Activeu-ho a la configuració"
     },
     "rubric": {
+      "speedHardware": "La velocitat depèn del maquinari. La transcripció pot ser ràpida amb una GPU compatible o en un Mac amb un xip de la sèrie M d’Apple.",
+      "editorialGrade": "{{languages}} · Valoració de l’autor a partir de la seva experiència amb el dictat mixt en rus i anglès.",
       "gradeTitle": "Precisió en {{language}}: {{grade}}",
       "accuracyTitle": "Precisió en {{language}}",
       "overallTitle": "Precisió en les vostres llengües: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Suprimeix {{name}}",
       "cancelDownload": "Atura la baixada de {{name}}",
       "legend": {
+        "measuredAndEditorial": "Els percentatges de sota corresponen a les proves. Per la seva experiència amb el dictat mixt, l’autor atorga una A− als dos models Breeze per al rus i l’anglès, i a Whisper Turbo per al rus.",
         "open": "Com es puntuen els models",
         "accuracyNote": "Per a cadascuna de les vostres llengües: quantes paraules ha fallat un model en les nostres gravacions de prova.",
         "speedNote": {

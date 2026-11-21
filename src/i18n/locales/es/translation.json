@@ -22,6 +22,10 @@
     "about": "Acerca de"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "El modelo se optimizó originalmente para el mandarín de Taiwán. Reconoce muy bien el habla rusa con palabras y expresiones en inglés.",
+      "turbo": "Si dictas mezclando ruso e inglés, selecciona el ruso como idioma de reconocimiento y usa la instrucción V3 — Ru-En. Así obtendrás una precisión comparable a la de Breeze-ASR-25."
+    },
     "customModelDescription": "Sin soporte oficial",
     "migration": {
       "title": "Tus modelos necesitan una actualización",
@@ -238,6 +242,8 @@
       "translateTitle": "Puede convertir lo que dices en texto en inglés. Actívalo en la configuración"
     },
     "rubric": {
+      "speedHardware": "La velocidad depende del equipo. La transcripción puede ser rápida con una GPU compatible o en un Mac con un chip de la serie M de Apple.",
+      "editorialGrade": "{{languages}} · Valoración del autor basada en su experiencia con dictados que combinan ruso e inglés.",
       "gradeTitle": "Precisión en {{language}}: {{grade}}",
       "accuracyTitle": "Precisión en {{language}}",
       "overallTitle": "Precisión en tus idiomas: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Eliminar {{name}}",
       "cancelDownload": "Detener la descarga de {{name}}",
       "legend": {
+        "measuredAndEditorial": "Los porcentajes corresponden a las grabaciones de prueba. Por su experiencia con el dictado mixto, el autor asigna una A− a ambos modelos Breeze para ruso e inglés y a Whisper Turbo para ruso.",
         "open": "Cómo se califican los modelos",
         "accuracyNote": "Para cada uno de tus idiomas: cuántas palabras erró un modelo en nuestras grabaciones de prueba.",
         "speedNote": {

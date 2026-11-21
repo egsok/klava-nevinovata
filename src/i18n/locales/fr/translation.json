@@ -22,6 +22,10 @@
     "about": "À propos"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Le modèle a d’abord été optimisé pour le mandarin de Taïwan. Il reconnaît très bien le russe ponctué de mots et d’expressions en anglais.",
+      "turbo": "Pour une dictée mêlant russe et anglais, sélectionnez le russe comme langue de reconnaissance et utilisez l’invite V3 — Ru-En. La précision est alors comparable à celle de Breeze-ASR-25."
+    },
     "customModelDescription": "Non officiellement pris en charge",
     "migration": {
       "title": "Vos modèles doivent être mis à jour",
@@ -238,6 +242,8 @@
       "translateTitle": "Peut transformer ce que vous dites en texte anglais. À activer dans les paramètres"
     },
     "rubric": {
+      "speedHardware": "La vitesse dépend du matériel. La transcription peut être rapide avec un processeur graphique compatible ou sur un Mac équipé d’une puce Apple de série M.",
+      "editorialGrade": "{{languages}} · Note attribuée par l’auteur d’après son expérience des dictées mêlant russe et anglais.",
       "gradeTitle": "Précision en {{language}} : {{grade}}",
       "accuracyTitle": "Précision en {{language}}",
       "overallTitle": "Précision dans vos langues : {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Supprimer {{name}}",
       "cancelDownload": "Arrêter le téléchargement de {{name}}",
       "legend": {
+        "measuredAndEditorial": "Les pourcentages ci-dessous correspondent aux enregistrements de test. D’après sa pratique de la dictée mixte, l’auteur attribue A− aux deux modèles Breeze en russe et en anglais, et à Whisper Turbo en russe.",
         "open": "Comment les modèles sont évalués",
         "accuracyNote": "Pour chacune de vos langues : combien de mots un modèle a faux dans nos enregistrements de test.",
         "speedNote": {

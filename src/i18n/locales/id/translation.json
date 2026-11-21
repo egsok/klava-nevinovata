@@ -22,6 +22,10 @@
     "about": "Tentang"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "Model ini awalnya dioptimalkan untuk bahasa Mandarin Taiwan. Model ini sangat baik dalam mengenali ucapan bahasa Rusia yang diselingi kata dan frasa bahasa Inggris.",
+      "turbo": "Untuk ucapan campuran bahasa Rusia dan Inggris, pilih bahasa Rusia sebagai bahasa pengenalan dan gunakan prompt transkripsi V3 — Ru-En. Akurasinya akan sebanding dengan Breeze-ASR-25."
+    },
     "customModelDescription": "Tidak didukung secara resmi",
     "migration": {
       "title": "Model Anda perlu diperbarui",
@@ -238,6 +242,8 @@
       "translateTitle": "Bisa mengubah ucapan Anda menjadi teks bahasa Inggris. Aktifkan di pengaturan"
     },
     "rubric": {
+      "speedHardware": "Kecepatan bergantung pada perangkat keras Anda. Transkripsi bisa cepat dengan GPU yang kompatibel atau di Mac dengan cip Apple seri M.",
+      "editorialGrade": "{{languages}} · Penilaian pengembang berdasarkan pengalaman mendikte dalam bahasa Rusia dan Inggris secara bergantian.",
       "gradeTitle": "Akurasi {{language}}: {{grade}}",
       "accuracyTitle": "Akurasi {{language}}",
       "overallTitle": "Akurasi untuk bahasa Anda: {{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "Hapus {{name}}",
       "cancelDownload": "Hentikan unduhan {{name}}",
       "legend": {
+        "measuredAndEditorial": "Persentase di bawah ini berasal dari rekaman uji. Berdasarkan pengalaman dengan dikte campuran, pengembang memberi nilai A− untuk kedua model Breeze dalam bahasa Rusia dan Inggris, serta untuk Whisper Turbo dalam bahasa Rusia.",
         "open": "Cara model dinilai",
         "accuracyNote": "Untuk setiap bahasa Anda: berapa banyak kata yang salah oleh model dalam rekaman uji kami.",
         "speedNote": {

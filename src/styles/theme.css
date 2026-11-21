@@ -52,6 +52,8 @@
   /* Type printed over solid ink. Paper white, not screen white: #fff on the
      violet buzzes, the kraft sheet's own cream sits on it (8.4:1). */
   --color-on-ink: #f2ecdc;
+  --light-color-demo-window: var(--color-on-ink);
+  --dark-color-demo-window: #292044;
 
   /* Semantic status roles stay inside the two-ink palette. */
   --light-color-warning: var(--light-color-logo-primary);
@@ -69,6 +71,9 @@
   --color-state-soft: var(--light-color-state-soft);
   --color-warning: var(--light-color-warning);
   --color-error: var(--light-color-error);
+  --color-demo-window: var(--light-color-demo-window);
+  --demo-busy-opacity: 0.45;
+  --demo-caption: var(--color-ink-2);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,6 +86,9 @@
     --color-state-soft: var(--dark-color-state-soft);
     --color-warning: var(--dark-color-warning);
     --color-error: var(--dark-color-error);
+    --color-demo-window: var(--dark-color-demo-window);
+    --demo-busy-opacity: 0.92;
+    --demo-caption: var(--dark-color-mid-gray);
   }
 }
 
@@ -103,6 +111,9 @@
   --color-state-soft: var(--light-color-state-soft);
   --color-warning: var(--light-color-warning);
   --color-error: var(--light-color-error);
+  --color-demo-window: var(--light-color-demo-window);
+  --demo-busy-opacity: 0.45;
+  --demo-caption: var(--color-ink-2);
 }
 
 :root[data-theme="dark"] {
@@ -114,6 +125,9 @@
   --color-state-soft: var(--dark-color-state-soft);
   --color-warning: var(--dark-color-warning);
   --color-error: var(--dark-color-error);
+  --color-demo-window: var(--dark-color-demo-window);
+  --demo-busy-opacity: 0.92;
+  --demo-caption: var(--dark-color-mid-gray);
 }
 
 /* Upstream 0.10 semantic roles mapped onto the fork's two inks. */
@@ -149,7 +163,6 @@
   --color-mascot-line: var(--color-text);
   --color-wordmark: var(--color-logo-primary);
   --color-wordmark-stroke: var(--color-text);
-  --color-demo-window: #f2ecdc;
   --color-demo-lid: #1e1640;
   --color-demo-alu-hi: #452ba6;
   --color-demo-alu-lo: #2c1a72;

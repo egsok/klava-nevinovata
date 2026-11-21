@@ -14,27 +14,72 @@ export const SAMPLES: Record<string, string> = {
   "zh-Hant": "我們明天的設計評審能改到三點嗎？我想多一點時間把原型做完。",
   "zh-HK": "我哋聽日嘅設計評審可唔可以改到三點？我想多啲時間做完個原型。",
   pt: "Podemos mudar a revisão de design de amanhã para as três? Quero um pouco mais de tempo para terminar os protótipos.",
-  ru: "Можем перенести завтрашний дизайн-ревью на три часа? Хочу ещё немного времени, чтобы доделать макеты.",
+  ru: "Можем перенести завтрашнее дизайн-ревью на три часа? Нужно доделать макеты к завтрашнему обсуждению.",
   it: "Possiamo spostare la revisione del design di domani alle tre? Vorrei un po' più di tempo per finire i prototipi.",
 };
 
-// English has a separate line per mode: a short reply (hold), a longer note (tap).
+// Each chat opener and note title belongs to the example, not the app's chrome.
+const CONTEXT: Record<string, { hold: string; tap: string }> = {
+  es: {
+    hold: "¿A qué hora revisamos los diseños mañana?",
+    tap: "Preparar la revisión de diseño",
+  },
+  fr: {
+    hold: "À quelle heure regarde-t-on les maquettes demain ?",
+    tap: "Préparer la revue de design",
+  },
+  de: {
+    hold: "Wann besprechen wir morgen die Entwürfe?",
+    tap: "Vorbereitung auf die Designbesprechung",
+  },
+  ja: {
+    hold: "明日のデザインレビューは何時にしましょうか？",
+    tap: "デザインレビューの準備",
+  },
+  ko: { hold: "내일 디자인 리뷰는 몇 시에 할까요?", tap: "디자인 리뷰 준비" },
+  "zh-Hans": { hold: "明天几点看设计稿？", tap: "设计评审准备" },
+  "zh-Hant": { hold: "明天幾點看設計稿？", tap: "設計評審準備" },
+  "zh-HK": { hold: "聽日幾點睇設計稿？", tap: "設計評審準備" },
+  pt: {
+    hold: "A que horas vamos rever os protótipos amanhã?",
+    tap: "Preparação para a revisão de design",
+  },
+  ru: { hold: "Во сколько завтра обсудим макеты?", tap: "К дизайн-ревью" },
+  it: {
+    hold: "A che ora rivediamo i prototipi domani?",
+    tap: "Preparazione della revisione del design",
+  },
+};
+
 const ENGLISH = {
   hold: "Yes! Running ten minutes late, save me a seat.",
   tap: "Picnic in the park on Saturday, then dinner at Rosa's. Bring the blue blanket and the good speaker.",
 };
 
-/** Hold uses the first spoken language, tap the second; no sample falls back to English. */
+/** Both scenes follow the interface language. Dictation preferences concern real speech. */
 export const demoLine = (
-  languages: string[],
+  uiLanguage: string,
   script: ChineseScriptChoice,
   mode: "hold" | "tap",
-): { language: string; text: string } => {
+  translate: (key: string, options: { lng: string }) => string,
+): { language: string; context: string; text: string } => {
   const i = mode === "hold" ? 0 : 1;
-  const langs = languages.length ? languages : ["en"];
-  const language = langs[i % langs.length];
-  const sample = isChinese(language) ? SAMPLES[script] : SAMPLES[language];
-  if (!sample) return { language: "en", text: ENGLISH[mode] };
+  const ui = uiLanguage.toLowerCase().split("-")[0];
+  const language = isChinese(ui) ? script : ui;
+  const sample = SAMPLES[language];
+  if (!sample)
+    return {
+      language: "en",
+      context: translate(
+        mode === "hold" ? "onboarding.demo.chat" : "onboarding.demo.noteTitle",
+        { lng: "en" },
+      ),
+      text: ENGLISH[mode],
+    };
   const sentences = sample.split(/(?<=[?？。！!.])\s*/).filter(Boolean);
-  return { language, text: sentences[i % sentences.length] };
+  return {
+    language,
+    context: CONTEXT[language][mode],
+    text: sentences[i % sentences.length],
+  };
 };

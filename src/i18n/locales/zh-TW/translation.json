@@ -22,6 +22,10 @@
     "about": "關於"
   },
   "onboarding": {
+    "dictationModels": {
+      "breeze": "模型最初針對臺灣華語進行最佳化，也很擅長辨識夾雜英語單字和片語的俄語。",
+      "turbo": "聽寫俄英混合語音時，請將辨識語言設為俄語，並選用 V3 — Ru-En 轉錄提示詞。這樣就能得到與 Breeze-ASR-25 相當的準確度。"
+    },
     "customModelDescription": "官方不支援",
     "migration": {
       "title": "您的模型需要更新",
@@ -238,6 +242,8 @@
       "translateTitle": "可以把您說的話轉成英文文字。請在設定中開啟"
     },
     "rubric": {
+      "speedHardware": "速度取決於硬體。使用相容的 GPU 或搭載 Apple M 系列晶片的 Mac 時，轉錄速度可以很快。",
+      "editorialGrade": "{{languages}} · 作者依據俄英混合聽寫的實際使用經驗給出的評分。",
       "gradeTitle": "{{language}}準確度：{{grade}}",
       "accuracyTitle": "{{language}}準確度",
       "overallTitle": "您所用語言的準確度：{{grade}}",
@@ -425,6 +431,7 @@
       "deleteModel": "刪除 {{name}}",
       "cancelDownload": "停止下載 {{name}}",
       "legend": {
+        "measuredAndEditorial": "下方百分比來自測試錄音。根據混合聽寫的實際使用經驗，作者將兩款 Breeze 模型的俄語和英語辨識，以及 Whisper Turbo 的俄語辨識，都評為 A−。",
         "open": "模型如何評分",
         "accuracyNote": "針對您的每一種語言：模型在我們的測試錄音中聽錯了多少字。",
         "speedNote": {

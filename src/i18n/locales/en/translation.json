@@ -24,7 +24,7 @@
   "onboarding": {
     "dictationModels": {
       "breeze": "Originally optimized for Taiwanese Mandarin. Works very well for Russian dictation with English words and phrases.",
-      "turbo": "For mixed Russian and English speech, use the V3 — Ru-En transcription prompt to get accuracy comparable to Breeze-ASR-25."
+      "turbo": "For mixed Russian and English speech, select Russian as the recognition language and use the V3 — Ru-En transcription prompt. Accuracy is then comparable to Breeze-ASR-25."
     },
     "customModelDescription": "Not officially supported",
     "migration": {
@@ -242,7 +242,8 @@
       "translateTitle": "Can turn what you say into English text. Turn it on in settings"
     },
     "rubric": {
-      "editorialGrade": "The grade for {{languages}} reflects our experience with mixed Russian and English dictation. It has no corresponding measured error percentage.",
+      "speedHardware": "Speed depends on your hardware. Transcription can be fast on a compatible GPU or a Mac with an Apple M-series chip.",
+      "editorialGrade": "{{languages}} · The author’s rating based on experience with mixed Russian and English dictation.",
       "gradeTitle": "{{language}} accuracy: {{grade}}",
       "accuracyTitle": "{{language}} accuracy",
       "overallTitle": "Accuracy in your languages: {{grade}}",
