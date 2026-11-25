@@ -5,9 +5,14 @@ on:
   push:
     tags: ["v*-*"]
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   create-release:
     permissions:
+      actions: read
       contents: write
     runs-on: ubuntu-latest
     outputs:
@@ -16,6 +21,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Bind release to the accepted Windows candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/verify-release.py source
+          pin=.github/verified-windows.json
+          run=$(jq -er .run_id "$pin")
+          commit=$(jq -er .commit "$pin")
+          attempt=$(jq -er .attempt "$pin")
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/attempts/$attempt" |
+            jq -e --arg commit "$commit" --arg branch "candidate/windows/$GITHUB_REF_NAME" '
+              .status == "completed" and .conclusion == "success" and .event == "push" and
+              .head_sha == $commit and .head_branch == $branch and
+              .path == ".github/workflows/personal-windows.yml"'
+          gh run download "$run" -n "verified-windows-$commit-$attempt" -D "$RUNNER_TEMP/tested"
+          python3 scripts/verify-release.py candidate "$RUNNER_TEMP/tested"
 
       - name: Get version from tauri.conf.json
         id: get-version
@@ -46,6 +70,7 @@ jobs:
             const existing = releases.find(release => release.tag_name === `v${version}`);
             if (existing) {
               if (!existing.draft) throw new Error(`Release v${version} is already published`);
+              if (existing.body !== body) throw new Error('Existing draft has different release notes');
               return existing.id;
             }
             const { data } = await github.rest.repos.createRelease({
@@ -95,7 +120,7 @@ jobs:
       upload-artifacts: false
       release-id: ${{ needs.create-release.outputs.release-id }}
       # A manual CI repair must build the same tagged application source.
-      ref: v${{ needs.create-release.outputs.version }}
+      ref: ${{ github.sha }}
       # Releases always build from scratch — never restore the Rust cache, so a
       # stale cached native lib can never be linked into a shipped artifact.
       no-cache: true
@@ -103,12 +128,58 @@ jobs:
 
   publish-release:
     permissions:
+      actions: read
       contents: write
     needs: [create-release, publish-tauri]
     runs-on: ubuntu-latest
     if: success()
     steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - name: Prepare locked Tauri signer and updater verifier
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          sudo apt-get update -qq
+          sudo apt-get install -y minisign
+      - name: Retrieve draft and exact tested NSIS
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_ID: ${{ needs.create-release.outputs.release-id }}
+        run: |
+          test "$(gh api "repos/$GITHUB_REPOSITORY/releases/$EXPECTED_ID" --jq '.draft')" = true
+          pin=.github/verified-windows.json
+          gh run download "$(jq -er .run_id "$pin")" -n "verified-windows-$(jq -er .commit "$pin")-$(jq -er .attempt "$pin")" -D "$RUNNER_TEMP/tested"
+          python3 scripts/verify-release.py candidate "$RUNNER_TEMP/tested"
+          bundle="$RUNNER_TEMP/bundle"
+          mkdir "$bundle"
+          gh release download "$GITHUB_REF_NAME" -D "$bundle"
+          name=$(jq -er .file "$RUNNER_TEMP/tested/verification.json")
+          cp "$RUNNER_TEMP/tested/$name" "$bundle/$name"
+          mv "$bundle/$name.sig" "$RUNNER_TEMP/rebuilt.sig"
+      - name: Sign the accepted bytes for the updater
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          name=$(jq -er .file "$RUNNER_TEMP/tested/verification.json")
+          bun run tauri signer sign "$RUNNER_TEMP/bundle/$name" >/dev/null
+      - name: Verify all updater routes and signed packages, then replace three draft assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_ID: ${{ needs.create-release.outputs.release-id }}
+        run: |
+          bundle="$RUNNER_TEMP/bundle"
+          name=$(jq -er .file "$RUNNER_TEMP/tested/verification.json")
+          python3 scripts/verify-release.py replace-signature "$bundle"
+          python3 scripts/verify-release.py bundle "$bundle"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/releases/$EXPECTED_ID" --jq '.draft')" = true
+          gh release upload "$GITHUB_REF_NAME" "$bundle/$name" "$bundle/$name.sig" "$bundle/latest.json" --clobber
+          gh release view "$GITHUB_REF_NAME" --json isDraft,tagName,assets > "$RUNNER_TEMP/uploaded.json"
+          python3 scripts/verify-release.py uploaded "$bundle" --release "$RUNNER_TEMP/uploaded.json"
       - name: Flip draft to false
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "v${{ needs.create-release.outputs.version }}" --draft=false --repo "${{ github.repository }}"
+          EXPECTED_ID: ${{ needs.create-release.outputs.release-id }}
+        run: |
+          test "$(git ls-remote --refs origin "$GITHUB_REF" | cut -f1)" = "$(git rev-parse HEAD)"
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$EXPECTED_ID" -F draft=false --silent

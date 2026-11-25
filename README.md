@@ -14,7 +14,7 @@
 
 `klava-nevinovata` is my daily-driver fork of Handy, the offline speech-to-text desktop app. It stays close to upstream while adding fixes for recognition quality and reliability issues I encounter in everyday Russian dictation on Windows.
 
-Release [0.10.1-3](https://github.com/egsok/klava-nevinovata/releases/tag/v0.10.1-3) is based on Handy 0.10.1. Choose Russian alone or together with English during setup, and the app will recommend **Breeze-ASR-25**. You can also transcribe audio and video files from History.
+Choose Russian alone or together with English during setup, and the app will recommend **Breeze-ASR-25**. You can also transcribe audio and video files from History. [Download the latest release and see what changed](https://github.com/egsok/klava-nevinovata/releases/latest).
 
 ## What's different from upstream
 
