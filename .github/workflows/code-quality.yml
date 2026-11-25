@@ -1,5 +1,6 @@
 name: "code quality"
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches: [main]
@@ -30,7 +31,7 @@ on:
       - ".github/workflows/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: code-quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

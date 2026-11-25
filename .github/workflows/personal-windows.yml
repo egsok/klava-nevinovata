@@ -1,0 +1,58 @@
+name: Personal Windows upgrade
+
+on:
+  push:
+    branches: ["candidate/windows/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/code-quality.yml
+  rust:
+    uses: ./.github/workflows/test.yml
+  browser:
+    uses: ./.github/workflows/playwright.yml
+
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      platform: windows-latest
+      target: x86_64-pc-windows-msvc
+      build-args: --no-sign -- --locked
+      ref: ${{ github.sha }}
+      asset-prefix: personal
+      upload-artifacts: true
+      no-cache: true
+
+  upgrade:
+    needs: [build, code-quality, rust, browser]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: personal-x86_64-pc-windows-msvc
+          path: ${{ runner.temp }}/candidate
+      - name: Compare installed profiles across upgrade and rollback
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/personal-update/check_installer.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: verified-windows-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/verified/*
+          if-no-files-found: error
+          retention-days: 30

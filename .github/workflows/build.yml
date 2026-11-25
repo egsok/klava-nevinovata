@@ -53,8 +53,7 @@ env:
 
 jobs:
   build:
-    permissions:
-      contents: write
+    # Each caller sets its permissions. The personal Windows check has read access.
     runs-on: ${{ inputs.platform }}
     steps:
       # Kept for git checkout and general tooling headroom. The native

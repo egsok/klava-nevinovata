@@ -1,5 +1,6 @@
 name: "test"
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches: [main]
@@ -10,7 +11,7 @@ on:
       - "src-tauri/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
