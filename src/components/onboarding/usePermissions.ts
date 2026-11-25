@@ -265,7 +265,6 @@ export const usePermissions = (preview: boolean): Permissions => {
     const generation = generationRef.current;
     if (preview || !canApply(generation)) return;
     try {
-      await commands.resetMacosPermission("accessibility");
       await requestAccessibilityPermission();
       if (!canApply(generation)) return;
       setAccessibility("waiting");
@@ -284,7 +283,6 @@ export const usePermissions = (preview: boolean): Permissions => {
       if (isWindows || microphoneAsked)
         await commands.openMicrophonePrivacySettings();
       else {
-        if (isMacOS) await commands.resetMacosPermission("microphone");
         await requestMicrophonePermission();
         // A prompt takes focus from Handy; still in front a moment later
         // means there was none (denied before), so go back to asking.
